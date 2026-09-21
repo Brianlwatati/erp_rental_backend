@@ -1,0 +1,13 @@
+import { Router } from "express";
+import * as c from "../controllers/unit.controller";
+import { validateBody } from "../middleware/validation.middleware";
+import { authorize } from "../middleware/authorize";
+import { unitCreateSchema, unitUpdateSchema } from "../schemas/property.schema";
+const r = Router();
+r.use(authorize("unit", "view"));
+r.get("/building/:buildingId", c.list);
+r.post("/building/:buildingId", validateBody(unitCreateSchema), c.create);
+r.get("/:id", c.get);
+r.patch("/:id", validateBody(unitUpdateSchema), c.update);
+r.delete("/:id", c.remove);
+export default r;

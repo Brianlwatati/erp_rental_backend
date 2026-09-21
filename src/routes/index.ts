@@ -1,0 +1,27 @@
+import { Router } from 'express';
+import propertyRoutes from './property.routes';
+import buildingRoutes from './building.routes';
+import unitRoutes from './unit.routes';
+import tenantRoutes from './tenant.routes';
+import leaseRoutes from './lease.routes';
+import invoiceRoutes from './invoice.routes';
+import paymentRoutes from './payment.routes';
+import expenseCategoryRoutes from './expense-category.routes';
+import vendorRoutes from './vendor.routes';
+import expenseRoutes from './expense.routes';
+import maintenanceRoutes from './maintenance.routes';
+
+const r = Router();
+r.get('/', (_req, res) => res.json({ message: 'Rental Management API v1' }));
+r.use('/properties', propertyRoutes);
+r.use('/buildings', buildingRoutes);
+r.use('/units', unitRoutes);
+r.use('/tenants', tenantRoutes);
+r.use('/leases', leaseRoutes);
+r.use('/invoices', invoiceRoutes);
+r.use('/payments', paymentRoutes);
+r.use('/expense-categories', expenseCategoryRoutes);
+r.use('/vendors', vendorRoutes);
+r.use('/expenses', expenseRoutes);
+r.use('/maintenance-requests', maintenanceRoutes);
+export default r;
