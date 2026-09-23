@@ -1,6 +1,6 @@
 CREATE TABLE rental_invoices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   tenant_id UUID NOT NULL REFERENCES rental_tenants(id) ON DELETE RESTRICT,
   lease_id UUID NOT NULL REFERENCES rental_leases(id) ON DELETE RESTRICT,
   invoice_number VARCHAR(100) NOT NULL,

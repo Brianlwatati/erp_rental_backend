@@ -4,6 +4,7 @@ const known: Record<string, [number, string]> = {
   PROPERTY_NOT_FOUND: [404, "Property not found"],
   BUILDING_NOT_FOUND: [404, "Building not found"],
   UNIT_NOT_FOUND: [404, "Unit not found"],
+  UNIT_TYPE_NOT_FOUND: [404, "Unit type not found"],
 
   TENANT_NOT_FOUND: [404, "Tenant not found"],
   TENANT_DOCUMENT_NOT_FOUND: [404, "Tenant document not found"],
@@ -78,20 +79,16 @@ export function errorMiddleware(
     return res.status(status).json({ success: false, message });
   }
   if (error?.code === "23505")
-    return res
-      .status(409)
-      .json({
-        success: false,
-        message: "A record with the same unique value already exists",
-      });
+    return res.status(409).json({
+      success: false,
+      message: "A record with the same unique value already exists",
+    });
   if (error?.code === "23503")
-    return res
-      .status(409)
-      .json({
-        success: false,
-        message:
-          "This record cannot be deleted because it is referenced by another record",
-      });
+    return res.status(409).json({
+      success: false,
+      message:
+        "This record cannot be deleted because it is referenced by another record",
+    });
   return res
     .status(500)
     .json({ success: false, message: "Internal server error" });

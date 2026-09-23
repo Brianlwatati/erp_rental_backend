@@ -6,6 +6,7 @@ import { unitCreateSchema, unitUpdateSchema } from "../schemas/property.schema";
 const r = Router();
 r.use(authorize("unit", "view"));
 r.get("/building/:buildingId", c.list);
+r.get("/building/:buildingId", c.list);
 r.post("/building/:buildingId", validateBody(unitCreateSchema), c.create);
 r.get("/:id", c.get);
 r.patch("/:id", validateBody(unitUpdateSchema), c.update);

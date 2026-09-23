@@ -1,6 +1,6 @@
 CREATE TABLE rental_expense_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   name VARCHAR(100) NOT NULL,
   code VARCHAR(50) NOT NULL,
   description TEXT,
@@ -11,7 +11,7 @@ CREATE TABLE rental_expense_categories (
 
 CREATE TABLE rental_vendors (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   name VARCHAR(200) NOT NULL,
   contact_person VARCHAR(200),
   phone VARCHAR(50),
@@ -25,7 +25,7 @@ CREATE TABLE rental_vendors (
 
 CREATE TABLE rental_expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   property_id UUID REFERENCES rental_properties(id) ON DELETE SET NULL,
   building_id UUID REFERENCES rental_buildings(id) ON DELETE SET NULL,
   unit_id UUID REFERENCES rental_units(id) ON DELETE SET NULL,

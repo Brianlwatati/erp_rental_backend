@@ -11,6 +11,7 @@ import {
 const r = Router();
 r.use(authorize("invoice", "view"));
 r.get("/", c.list);
+r.get("/not-fully-paid", c.listNotFullyPaid);
 r.post("/", validateBody(invoiceCreateSchema), c.create);
 r.get("/:id", c.get);
 r.patch("/:id", validateBody(invoiceUpdateSchema), c.update);

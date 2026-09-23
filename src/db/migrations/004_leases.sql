@@ -1,6 +1,6 @@
 CREATE TABLE rental_leases (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   unit_id UUID NOT NULL REFERENCES rental_units(id) ON DELETE RESTRICT,
   tenant_id UUID NOT NULL REFERENCES rental_tenants(id) ON DELETE RESTRICT,
   lease_number VARCHAR(100) NOT NULL,

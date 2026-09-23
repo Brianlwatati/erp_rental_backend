@@ -8,6 +8,8 @@ import {
 } from "../schemas/property.schema";
 const r = Router();
 r.use(authorize("building", "view"));
+
+r.get("/all", c.allbuildings);
 r.get("/property/:propertyId", c.list);
 r.post("/property/:propertyId", validateBody(buildingCreateSchema), c.create);
 r.get("/:id", c.get);

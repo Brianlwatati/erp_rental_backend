@@ -1,4 +1,14 @@
 import { query } from "../config/database";
+
+export async function findallBuildings(companyId: string) {
+  return (
+    await query(
+      `SELECT b.* FROM rental_buildings b JOIN rental_properties p ON p.id=b.property_id WHERE p.company_id=$1 ORDER BY b.created_at DESC`,
+      [companyId],
+    )
+  ).rows;
+}
+
 export async function findBuildings(companyId: string, propertyId: string) {
   return (
     await query(

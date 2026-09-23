@@ -21,6 +21,22 @@ export async function list(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+
+export async function listNotFullyPaid(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    const { tenantId, leaseId } = r.query as Record<string, string | undefined>;
+    res.json({
+      success: true,
+      data: await s.listInvoicesNotFullyPaid(c(r), { tenantId, leaseId }),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
 export async function get(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({ success: true, data: await s.getInvoice(c(r), param(r, "id")) });

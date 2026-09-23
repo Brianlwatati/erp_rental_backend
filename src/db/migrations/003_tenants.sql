@@ -1,6 +1,6 @@
 CREATE TABLE rental_tenants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
   email VARCHAR(255),

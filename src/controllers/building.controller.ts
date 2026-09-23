@@ -6,6 +6,15 @@ const param = (r: Request, name: string): string => {
   if (Array.isArray(value)) throw new Error(`Invalid route parameter: ${name}`);
   return value;
 };
+
+export async function allbuildings(r: Request, res: Response, n: NextFunction) {
+  try {
+    res.json({ success: true, data: await s.alllistBuildings(c(r)) });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function list(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({

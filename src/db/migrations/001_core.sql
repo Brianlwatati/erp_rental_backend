@@ -19,7 +19,7 @@ CREATE TABLE rental_companies (
 
 CREATE TABLE rental_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   name VARCHAR(100) NOT NULL,
   code VARCHAR(50) NOT NULL,
   description TEXT,
@@ -42,7 +42,7 @@ CREATE TABLE rental_role_permissions (
 
 CREATE TABLE rental_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE rental_refresh_tokens (
 
 CREATE TABLE rental_audit_logs (
   id BIGSERIAL PRIMARY KEY,
-  company_id UUID REFERENCES rental_companies(id) ON DELETE SET NULL,
+  company_id VARCHAR(36) NOT NULL ,
   user_id UUID REFERENCES rental_users(id) ON DELETE SET NULL,
   action VARCHAR(100) NOT NULL,
   entity_type VARCHAR(100),

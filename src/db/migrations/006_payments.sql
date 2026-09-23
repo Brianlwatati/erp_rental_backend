@@ -1,6 +1,6 @@
 CREATE TABLE rental_payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   tenant_id UUID NOT NULL REFERENCES rental_tenants(id) ON DELETE RESTRICT,
   payment_number VARCHAR(100) NOT NULL,
   payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -26,7 +26,7 @@ CREATE TABLE rental_payment_allocations (
 
 CREATE TABLE rental_receipts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id UUID NOT NULL REFERENCES rental_companies(id) ON DELETE CASCADE,
+  company_id VARCHAR(36) NOT NULL ,
   payment_id UUID NOT NULL UNIQUE REFERENCES rental_payments(id) ON DELETE RESTRICT,
   receipt_number VARCHAR(100) NOT NULL,
   receipt_date DATE NOT NULL DEFAULT CURRENT_DATE,
