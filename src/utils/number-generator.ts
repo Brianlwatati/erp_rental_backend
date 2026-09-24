@@ -1,5 +1,5 @@
 function pad(n: number, size: number) {
-  return String(n).padStart(size, '0');
+  return String(n).padStart(size, "0");
 }
 
 /**

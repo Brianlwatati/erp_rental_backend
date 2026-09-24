@@ -1,22 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE rental_companies (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(150) NOT NULL,
-  registration_number VARCHAR(100),
-  email VARCHAR(255),
-  phone VARCHAR(50),
-  address TEXT,
-  city VARCHAR(100),
-  country VARCHAR(100) DEFAULT 'Kenya',
-  currency CHAR(3) NOT NULL DEFAULT 'KES',
-  timezone VARCHAR(100) NOT NULL DEFAULT 'Africa/Nairobi',
-  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
-    CHECK (status IN ('ACTIVE', 'INACTIVE')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
+-- Rental Management System Core Tables
+-- rental companies table has been removed, as it is now managed by the ias application. 
+-- The company_id field in other tables will reference the company_id from the ias application. 
 CREATE TABLE rental_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id VARCHAR(36) NOT NULL ,
