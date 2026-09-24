@@ -4,7 +4,7 @@ import { query } from "../config/database";
 export async function findExpenseCategories(companyId: string) {
   return (
     await query(
-      "SELECT * FROM rental_expense_categories WHERE company_id=$1 ORDER BY name",
+      "SELECT * FROM rental_expense_categories WHERE company_id IN ('default', $1) ORDER BY name",
       [companyId],
     )
   ).rows;

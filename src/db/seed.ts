@@ -3,9 +3,8 @@ import { pool } from "../config/database";
 async function seed() {
   await pool.query(`
     INSERT INTO rental_expense_categories (company_id, name, code)
-    SELECT c.id, x.name, x.code
-    FROM rental_companies c
-    CROSS JOIN (VALUES
+    SELECT 'default', x.name, x.code
+    FROM (VALUES
       ('Maintenance', 'MAINTENANCE'),
       ('Utilities', 'UTILITIES'),
       ('Security', 'SECURITY'),
@@ -19,7 +18,7 @@ async function seed() {
     WHERE NOT EXISTS (
       SELECT 1
       FROM rental_expense_categories ec
-      WHERE ec.company_id = c.id AND ec.code = x.code
+      WHERE ec.company_id = 'default' AND ec.code = x.code
     );
   `);
 

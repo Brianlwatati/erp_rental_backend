@@ -1,6 +1,6 @@
 CREATE TABLE rental_expense_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id VARCHAR(36) NOT NULL ,
+  company_id VARCHAR(36) NOT NULL DEFAULT 'default',
   name VARCHAR(100) NOT NULL,
   code VARCHAR(50) NOT NULL,
   description TEXT,
