@@ -66,7 +66,7 @@ export async function issueReceipt(r: Request, res: Response, n: NextFunction) {
   try {
     res.status(201).json({
       success: true,
-      data: await s.issueReceipt(c(r), param(r, "id"), r.body),
+      data: await s.issueReceipt(c(r), param(r, "id"), { ...r.body, issuedBy: r.auth!.userId }),
     });
   } catch (e) {
     n(e);

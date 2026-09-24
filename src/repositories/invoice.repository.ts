@@ -67,6 +67,21 @@ export async function findInvoiceById(
     ).rows[0] ?? null
   );
 }
+
+export async function findInvoiceByIdForUpdate(
+  companyId: string,
+  id: string,
+  e: Executor,
+) {
+  return (
+    (
+      await e.query(
+        "SELECT * FROM rental_invoices WHERE company_id=$1 AND id=$2 FOR UPDATE",
+        [companyId, id],
+      )
+    ).rows[0] ?? null
+  );
+}
 export async function findInvoiceItems(invoiceId: string, e?: Executor) {
   return (
     await exec(e).query(

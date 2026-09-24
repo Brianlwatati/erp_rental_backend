@@ -16,7 +16,7 @@ export const invoiceCreateSchema = z.object({
     z.string().min(1).max(100).optional(),
   ),
   invoiceDate: z.string().date().optional(),
-  dueDate: z.date(),
+  dueDate: z.string().date(),
   periodStart: z.string().date(),
   periodEnd: z.string().date(),
   discount: z.number().nonnegative().default(0),

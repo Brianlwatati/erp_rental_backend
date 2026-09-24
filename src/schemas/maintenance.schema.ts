@@ -7,7 +7,6 @@ export const maintenanceRequestCreateSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(4000).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-  createdBy: z.string().uuid().optional(),
 });
 export const maintenanceRequestUpdateSchema = z.object({
   title: z.string().min(1).max(200).optional(),

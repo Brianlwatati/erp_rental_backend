@@ -1,4 +1,7 @@
-import { query } from "../config/database";
+import { pool, query } from "../config/database";
+
+type Executor = { query: typeof pool.query };
+const exec = (e?: Executor) => e ?? pool;
 
 // Expense categories
 export async function findExpenseCategories(companyId: string) {
@@ -159,9 +162,9 @@ export async function findExpenseById(companyId: string, id: string) {
     ).rows[0] ?? null
   );
 }
-export async function createExpense(companyId: string, d: any) {
+export async function createExpense(companyId: string, d: any, e?: Executor) {
   return (
-    await query(
+    await exec(e).query(
       `INSERT INTO rental_expenses(company_id,property_id,building_id,unit_id,expense_category_id,vendor_id,expense_number,description,amount,expense_date,payment_method,reference_number,status,created_by)
      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,COALESCE($10,CURRENT_DATE),$11,$12,COALESCE($13,'POSTED'),$14) RETURNING *`,
       [

@@ -32,7 +32,7 @@ async function applyAllocation(
   amount: number,
   client: any,
 ) {
-  const invoice = await invoiceRepo.findInvoiceById(c, invoiceId, client);
+  const invoice = await invoiceRepo.findInvoiceByIdForUpdate(c, invoiceId, client);
   if (!invoice) throw new Error("INVOICE_NOT_FOUND");
   if (invoice.tenant_id !== tenantId)
     throw new Error("INVOICE_TENANT_MISMATCH");
@@ -81,7 +81,7 @@ export async function allocatePayment(
   d: { invoiceId: string; amount: number },
 ) {
   return withTransaction(async (client) => {
-    const payment = await repo.findPaymentById(c, paymentId, client);
+    const payment = await repo.findPaymentByIdForUpdate(c, paymentId, client);
     if (!payment) throw new Error("PAYMENT_NOT_FOUND");
     if (payment.status !== "POSTED") throw new Error("PAYMENT_NOT_POSTED");
     const alreadyAllocated = await repo.sumAllocations(paymentId, client);
@@ -102,7 +102,7 @@ export async function allocatePayment(
 
 export async function reversePayment(c: string, id: string) {
   return withTransaction(async (client) => {
-    const payment = await repo.findPaymentById(c, id, client);
+    const payment = await repo.findPaymentByIdForUpdate(c, id, client);
     if (!payment) throw new Error("PAYMENT_NOT_FOUND");
     if (payment.status !== "POSTED") throw new Error("PAYMENT_NOT_POSTED");
     const existingReceipt = await repo.findReceiptByPaymentId(c, id, client);

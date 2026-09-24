@@ -19,5 +19,4 @@ export const paymentCreateSchema = z.object({
 export const receiptCreateSchema = z.object({
   receiptNumber: z.string().min(1).max(100).optional(),
   notes: z.string().max(2000).optional(),
-  issuedBy: z.string().uuid().optional(),
 });

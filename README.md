@@ -339,3 +339,18 @@ npm run db:migrate
 ## License
 
 This project is private and intended for internal use.
+
+## Production hardening
+
+The current backend includes:
+
+- strict JWT secret configuration and CORS allowlisting
+- Helmet, request-size limits, rate limiting, request IDs and safe error responses
+- PostgreSQL readiness/liveness checks
+- graceful HTTP/database shutdown and PostgreSQL pool error handling
+- route-level create/update/delete authorization
+- server-derived audit identities instead of trusting `createdBy`/`issuedBy` from clients
+- cross-company reference checks for related rental records
+- transaction row locks for payment/invoice allocation operations
+
+See `README-PRODUCTION.md` for deployment notes and the next recommended backend phase.

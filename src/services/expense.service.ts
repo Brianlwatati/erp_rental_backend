@@ -48,6 +48,40 @@ async function verifyReferences(c: string, d: any) {
     );
     if (!r.rowCount) throw new Error("PROPERTY_NOT_FOUND");
   }
+  if (d.buildingId) {
+    const r = await query(
+      `SELECT b.id FROM rental_buildings b
+       JOIN rental_properties p ON p.id=b.property_id
+       WHERE b.id=$1 AND p.company_id=$2`,
+      [d.buildingId, c],
+    );
+    if (!r.rowCount) throw new Error("BUILDING_NOT_FOUND");
+  }
+  if (d.unitId) {
+    const r = await query(
+      `SELECT u.id FROM rental_units u
+       JOIN rental_buildings b ON b.id=u.building_id
+       JOIN rental_properties p ON p.id=b.property_id
+       WHERE u.id=$1 AND p.company_id=$2`,
+      [d.unitId, c],
+    );
+    if (!r.rowCount) throw new Error("UNIT_NOT_FOUND");
+  }
+  if (d.propertyId && d.buildingId) {
+    const r = await query(
+      `SELECT b.id FROM rental_buildings b
+       WHERE b.id=$1 AND b.property_id=$2`,
+      [d.buildingId, d.propertyId],
+    );
+    if (!r.rowCount) throw new Error("BUILDING_NOT_FOUND");
+  }
+  if (d.buildingId && d.unitId) {
+    const r = await query(
+      "SELECT id FROM rental_units WHERE id=$1 AND building_id=$2",
+      [d.unitId, d.buildingId],
+    );
+    if (!r.rowCount) throw new Error("UNIT_NOT_FOUND");
+  }
   if (d.expenseCategoryId) {
     const r = await query(
       "SELECT id FROM rental_expense_categories WHERE id=$1 AND company_id=$2",

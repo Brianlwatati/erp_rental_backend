@@ -35,6 +35,5 @@ export const expenseCreateSchema = z.object({
     .optional(),
   referenceNumber: z.string().max(150).optional(),
   status: z.enum(["DRAFT", "POSTED", "CANCELLED"]).optional(),
-  createdBy: z.string().uuid().optional(),
 });
 export const expenseUpdateSchema = expenseCreateSchema.partial();

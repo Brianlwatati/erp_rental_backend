@@ -38,6 +38,21 @@ export async function findPaymentById(
     ).rows[0] ?? null
   );
 }
+
+export async function findPaymentByIdForUpdate(
+  companyId: string,
+  id: string,
+  e: Executor,
+) {
+  return (
+    (
+      await e.query(
+        "SELECT * FROM rental_payments WHERE company_id=$1 AND id=$2 FOR UPDATE",
+        [companyId, id],
+      )
+    ).rows[0] ?? null
+  );
+}
 export async function createPayment(companyId: string, d: any, e: Executor) {
   return (
     await e.query(
