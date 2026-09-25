@@ -84,7 +84,8 @@ async function verifyReferences(c: string, d: any) {
   }
   if (d.expenseCategoryId) {
     const r = await query(
-      "SELECT id FROM rental_expense_categories WHERE id=$1 AND company_id=$2",
+      "SELECT id FROM rental_expense_categories WHERE id=$1 AND (company_id=$2 OR company_id='default')",
+      // company_id IN ($2, 'default')
       [d.expenseCategoryId, c],
     );
     if (!r.rowCount) throw new Error("EXPENSE_CATEGORY_NOT_FOUND");
