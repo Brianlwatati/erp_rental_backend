@@ -16,6 +16,8 @@ export interface Property {
 export interface Building {
   id: string;
   property_id: string;
+  property_name: string;
+  property_code: string;
   name: string;
   code: string;
   floors: number | null;
@@ -27,6 +29,8 @@ export interface Building {
 export interface Unit {
   id: string;
   building_id: string;
+  building_name: string;
+  building_code: string;
   unit_type_id: string | null;
   unit_number: string;
   floor: number | null;

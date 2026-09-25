@@ -18,6 +18,8 @@ CREATE TABLE rental_properties (
 CREATE TABLE rental_buildings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id UUID NOT NULL REFERENCES rental_properties(id) ON DELETE CASCADE,
+  property_name VARCHAR(150) NOT NULL,
+  property_code VARCHAR(50) NOT NULL,
   name VARCHAR(150) NOT NULL,
   code VARCHAR(50) NOT NULL,
   floors INTEGER CHECK (floors IS NULL OR floors >= 0),
@@ -41,6 +43,8 @@ CREATE TABLE rental_unit_types (
 CREATE TABLE rental_units (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   building_id UUID NOT NULL REFERENCES rental_buildings(id) ON DELETE CASCADE,
+  building_name VARCHAR(150) NOT NULL,
+  building_code VARCHAR(50) NOT NULL,
   unit_type_id UUID REFERENCES rental_unit_types(id) ON DELETE SET NULL,
   unit_number VARCHAR(50) NOT NULL,
   floor INTEGER,

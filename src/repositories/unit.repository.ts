@@ -20,7 +20,7 @@ export async function findUnitById(companyId: string, id: string) {
 export async function createUnit(buildingId: string, d: any) {
   return (
     await query(
-      `INSERT INTO rental_units(building_id,unit_type_id,unit_number,floor,monthly_rent,deposit_amount,status,description) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      `INSERT INTO rental_units(building_id,building_name,building_code,unit_type_id,unit_number,floor,monthly_rent,deposit_amount,status,description) SELECT $1,b.name,b.code,$2,$3,$4,$5,$6,$7,$8 FROM rental_buildings b WHERE b.id=$1 RETURNING *`,
       [
         buildingId,
         d.unitTypeId ?? null,
