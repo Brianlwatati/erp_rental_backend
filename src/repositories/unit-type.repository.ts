@@ -3,7 +3,11 @@ import { query } from "../config/database";
 export async function findUnitTypes(companyId: string) {
   return (
     await query(
-      `SELECT * FROM rental_unit_types WHERE company_id=$1 ORDER BY name`,
+      `SELECT id, company_id, name, code, bedrooms, bathrooms, description,
+              (company_id = 'default') AS is_default
+       FROM rental_unit_types
+       WHERE company_id IN ($1, 'default')
+       ORDER BY name`,
       [companyId],
     )
   ).rows;

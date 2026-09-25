@@ -46,4 +46,5 @@ export interface UnitType {
   bedrooms: number;
   bathrooms: string;
   description: string | null;
+  is_default: boolean;
 }

@@ -1,6 +1,6 @@
 CREATE TABLE rental_properties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id VARCHAR(36) NOT NULL ,
+  company_id VARCHAR(36) NOT NULL  ,
   name VARCHAR(150) NOT NULL,
   code VARCHAR(50) NOT NULL,
   property_type VARCHAR(50),
@@ -29,7 +29,7 @@ CREATE TABLE rental_buildings (
 
 CREATE TABLE rental_unit_types (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id VARCHAR(36) NOT NULL ,
+  company_id VARCHAR(36) NOT NULL DEFAULT 'default',
   name VARCHAR(100) NOT NULL,
   code VARCHAR(50) NOT NULL,
   bedrooms INTEGER NOT NULL DEFAULT 0 CHECK (bedrooms >= 0),
