@@ -165,8 +165,8 @@ export async function findExpenseById(companyId: string, id: string) {
 export async function createExpense(companyId: string, d: any, e?: Executor) {
   return (
     await exec(e).query(
-      `INSERT INTO rental_expenses(company_id,property_id,building_id,unit_id,expense_category_id,vendor_id,expense_number,description,amount,expense_date,payment_method,reference_number,status,created_by)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,COALESCE($10,CURRENT_DATE),$11,$12,COALESCE($13,'POSTED'),$14) RETURNING *`,
+      `INSERT INTO rental_expenses(company_id,property_id,property_name,property_code,building_id,building_name,building_code,unit_id,unit_number,expense_category_id,vendor_id,expense_number,description,amount,expense_date,payment_method,reference_number,status,created_by)
+     VALUES($1,$2,(SELECT name FROM rental_properties WHERE id=$2),(SELECT code FROM rental_properties WHERE id=$2),$3,(SELECT name FROM rental_buildings WHERE id=$3),(SELECT code FROM rental_buildings WHERE id=$3),$4,(SELECT unit_number FROM rental_units WHERE id=$4),$5,$6,$7,$8,$9,COALESCE($10,CURRENT_DATE),$11,$12,COALESCE($13,'POSTED'),$14) RETURNING *`,
       [
         companyId,
         d.propertyId ?? null,

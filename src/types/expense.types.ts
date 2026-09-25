@@ -24,8 +24,13 @@ export interface Expense {
   id: string;
   company_id: string;
   property_id: string | null;
+  property_name: string | null;
+  property_code: string | null;
   building_id: string | null;
+  building_name: string | null;
+  building_code: string | null;
   unit_id: string | null;
+  unit_number: string | null;
   expense_category_id: string | null;
   vendor_id: string | null;
   expense_number: string;
