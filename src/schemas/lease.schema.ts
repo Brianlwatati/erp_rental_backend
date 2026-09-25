@@ -2,6 +2,12 @@ import { z } from "zod";
 
 export const leaseCreateSchema = z.object({
   unitId: z.string().uuid(),
+  unitNumber: z.string().min(1).max(50),
+  buildingId: z.string().uuid(),
+  buildingName: z.string().min(1).max(150),
+  buildingCode: z.string().min(1).max(50),
+  propertyName: z.string().min(1).max(150),
+  propertyCode: z.string().min(1).max(50),
   tenantId: z.string().uuid(),
   leaseNumber: z.string().min(1).max(100).optional(),
   startDate: z.string().date(),
@@ -13,7 +19,16 @@ export const leaseCreateSchema = z.object({
   notes: z.string().max(2000).optional(),
 });
 export const leaseUpdateSchema = leaseCreateSchema
-  .omit({ unitId: true, tenantId: true })
+  .omit({
+    unitId: true,
+    unitNumber: true,
+    buildingId: true,
+    buildingName: true,
+    buildingCode: true,
+    propertyName: true,
+    propertyCode: true,
+    tenantId: true,
+  })
   .partial();
 
 export const leaseTerminateSchema = z.object({

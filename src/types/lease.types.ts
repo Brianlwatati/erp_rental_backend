@@ -2,6 +2,12 @@ export interface Lease {
   id: string;
   company_id: string;
   unit_id: string;
+  unit_number: string;
+  building_id: string;
+  building_name: string;
+  building_code: string;
+  property_name: string;
+  property_code: string;
   tenant_id: string;
   lease_number: string;
   start_date: string;

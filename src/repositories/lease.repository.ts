@@ -38,11 +38,17 @@ export async function findLeaseById(companyId: string, id: string) {
 export async function createLease(companyId: string, d: any) {
   return (
     await query(
-      `INSERT INTO rental_leases(company_id,unit_id,tenant_id,lease_number,start_date,end_date,monthly_rent,deposit_amount,billing_day,status,notes)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,COALESCE($10,'ACTIVE'),$11) RETURNING *`,
+      `INSERT INTO rental_leases(company_id,unit_id,unit_number,building_id,building_name,building_code,property_name,property_code,tenant_id,lease_number,start_date,end_date,monthly_rent,deposit_amount,billing_day,status,notes)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16,'ACTIVE'),$17) RETURNING *`,
       [
         companyId,
         d.unitId,
+        d.unitNumber,
+        d.buildingId,
+        d.buildingName,
+        d.buildingCode,
+        d.propertyName,
+        d.propertyCode,
         d.tenantId,
         d.leaseNumber,
         d.startDate,
