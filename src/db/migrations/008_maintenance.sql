@@ -2,6 +2,7 @@ CREATE TABLE rental_maintenance_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id VARCHAR(36) NOT NULL ,
   property_id UUID NOT NULL REFERENCES rental_properties(id) ON DELETE RESTRICT,
+  building_id UUID  REFERENCES rental_buildings(id) ON DELETE SET NULL,
   unit_id UUID REFERENCES rental_units(id) ON DELETE SET NULL,
   tenant_id UUID REFERENCES rental_tenants(id) ON DELETE SET NULL,
   title VARCHAR(200) NOT NULL,
@@ -13,7 +14,7 @@ CREATE TABLE rental_maintenance_requests (
   reported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   resolved_at TIMESTAMPTZ,
   assigned_vendor_id UUID REFERENCES rental_vendors(id) ON DELETE SET NULL,
-  created_by UUID REFERENCES rental_users(id) ON DELETE SET NULL,
+  created_by  VARCHAR(36) NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

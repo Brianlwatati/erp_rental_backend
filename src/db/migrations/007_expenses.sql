@@ -39,7 +39,7 @@ CREATE TABLE rental_expenses (
   reference_number VARCHAR(150),
   status VARCHAR(20) NOT NULL DEFAULT 'POSTED'
     CHECK (status IN ('DRAFT', 'POSTED', 'CANCELLED')),
-  created_by UUID REFERENCES rental_users(id) ON DELETE SET NULL,
+  created_by VARCHAR(36) NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(company_id, expense_number)

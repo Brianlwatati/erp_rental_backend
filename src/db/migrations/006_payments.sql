@@ -31,7 +31,7 @@ CREATE TABLE rental_receipts (
   receipt_number VARCHAR(100) NOT NULL,
   receipt_date DATE NOT NULL DEFAULT CURRENT_DATE,
   amount NUMERIC(14,2) NOT NULL CHECK (amount > 0),
-  issued_by UUID REFERENCES rental_users(id) ON DELETE SET NULL,
+  issued_by VARCHAR(36) NOT NULL,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(company_id, receipt_number)

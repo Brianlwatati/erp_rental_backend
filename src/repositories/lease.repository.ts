@@ -38,8 +38,10 @@ export async function findLeaseById(companyId: string, id: string) {
 export async function createLease(companyId: string, d: any) {
   return (
     await query(
-      `INSERT INTO rental_leases(company_id,unit_id,unit_number,building_id,building_name,building_code,property_name,property_code,tenant_id,lease_number,start_date,end_date,monthly_rent,deposit_amount,billing_day,status,notes)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16,'ACTIVE'),$17) RETURNING *`,
+      `INSERT INTO rental_leases(company_id,unit_id,unit_number,building_id,building_name,building_code,
+      property_name,property_code,tenant_id,tenant_first_name,tenant_last_name,tenant_email,tenant_phone,lease_number,
+      start_date,end_date,monthly_rent,deposit_amount,billing_day,status,notes)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,COALESCE($20,'ACTIVE'),$21) RETURNING *`,
       [
         companyId,
         d.unitId,
@@ -50,6 +52,10 @@ export async function createLease(companyId: string, d: any) {
         d.propertyName,
         d.propertyCode,
         d.tenantId,
+        d.tenantFirstName,
+        d.tenantLastName,
+        d.tenantEmail,
+        d.tenantPhone,
         d.leaseNumber,
         d.startDate,
         d.endDate ?? null,
@@ -67,7 +73,8 @@ export async function updateLease(companyId: string, id: string, d: any) {
     (
       await query(
         `UPDATE rental_leases SET lease_number=COALESCE($3,lease_number),start_date=COALESCE($4,start_date),
-      end_date=COALESCE($5,end_date),monthly_rent=COALESCE($6,monthly_rent),deposit_amount=COALESCE($7,deposit_amount),
+      end_date=COALESCE($5,end_date),monthly_rent=COALESCE($6,monthly_rent),
+      deposit_amount=COALESCE($7,deposit_amount),
       billing_day=COALESCE($8,billing_day),status=COALESCE($9,status),notes=COALESCE($10,notes),updated_at=NOW()
      WHERE company_id=$1 AND id=$2 RETURNING *`,
         [
@@ -90,7 +97,8 @@ export async function terminateLease(companyId: string, id: string, d: any) {
   return (
     (
       await query(
-        `UPDATE rental_leases SET status='TERMINATED', termination_date=$3, termination_reason=$4, updated_at=NOW()
+        `UPDATE rental_leases SET status='TERMINATED', termination_date=$3, termination_reason=$4, 
+        updated_at=NOW()
      WHERE company_id=$1 AND id=$2 AND status <> 'TERMINATED' RETURNING *`,
         [companyId, id, d.terminationDate, d.terminationReason ?? null],
       )
@@ -120,7 +128,8 @@ export async function findLeaseCharges(companyId: string, leaseId: string) {
 export async function createLeaseCharge(leaseId: string, d: any) {
   return (
     await query(
-      `INSERT INTO rental_lease_charges(lease_id,name,charge_type,amount,recurring) VALUES($1,$2,$3,$4,$5) RETURNING *`,
+      `INSERT INTO rental_lease_charges(lease_id,name,charge_type,amount,recurring) VALUES($1,$2,$3,$4,$5) 
+      RETURNING *`,
       [leaseId, d.name, d.chargeType, d.amount, d.recurring ?? true],
     )
   ).rows[0];

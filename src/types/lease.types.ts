@@ -9,6 +9,8 @@ export interface Lease {
   property_name: string;
   property_code: string;
   tenant_id: string;
+  tenant_first_name: string;
+  tenant_last_name: string;
   lease_number: string;
   start_date: string;
   end_date: string | null;
