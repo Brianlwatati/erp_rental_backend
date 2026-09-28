@@ -31,7 +31,7 @@ r.post(
   c.terminate,
 );
 r.delete("/:id", authorize("lease", "delete"), c.remove);
-r.get("/tenantleases/:id", authorize("lease", "view"), c.tenantLeases);
+r.get("/tenantleases/:id", authorize("lease", "view"), c.getTenantLeases);
 r.get("/:leaseId/charges", authorize("lease", "view"), c.listCharges);
 r.post(
   "/:leaseId/charges",
