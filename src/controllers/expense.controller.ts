@@ -92,6 +92,7 @@ export async function createVendor(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+
 export async function updateVendor(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({
@@ -138,15 +139,13 @@ export async function createExpense(
   n: NextFunction,
 ) {
   try {
-    res
-      .status(201)
-      .json({
-        success: true,
-        data: await s.createExpense(c(r), {
-          ...r.body,
-          createdBy: r.auth!.userId,
-        }),
-      });
+    res.status(201).json({
+      success: true,
+      data: await s.createExpense(c(r), {
+        ...r.body,
+        createdBy: r.auth!.userId,
+      }),
+    });
   } catch (e) {
     n(e);
   }

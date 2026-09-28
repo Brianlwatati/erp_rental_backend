@@ -21,7 +21,10 @@ export async function findCompanyOverview(companyId: string) {
        (SELECT COUNT(*) FROM rental_tenants WHERE company_id=$1) AS "totalTenants",
        (SELECT COALESCE(SUM(total), 0)
           FROM rental_invoices
-         WHERE company_id=$1 AND status <> 'CANCELLED') AS "totalRevenue",
+         WHERE company_id=$1 AND status='PAID') AS "totalRevenue",
+       (SELECT COALESCE(SUM(balance), 0)
+          FROM rental_invoices
+         WHERE company_id=$1 AND status IN ('ISSUED', 'PARTIALLY_PAID', 'OVERDUE')) AS "totalDue",
        (SELECT COALESCE(SUM(amount), 0)
           FROM rental_expenses
          WHERE company_id=$1 AND status='POSTED') AS "totalExpenses",
@@ -35,6 +38,7 @@ export async function findCompanyOverview(companyId: string) {
   const totalUnits = Number(row.totalUnits);
   const occupiedUnits = Number(row.occupiedUnits);
   const totalRevenue = Number(row.totalRevenue);
+  const totalDue = Number(row.totalDue);
   const totalExpenses = Number(row.totalExpenses);
 
   return {
@@ -45,6 +49,7 @@ export async function findCompanyOverview(companyId: string) {
     occupancyRate: totalUnits === 0 ? 0 : (occupiedUnits / totalUnits) * 100,
     totalTenants: Number(row.totalTenants),
     totalRevenue,
+    totalDue,
     totalExpenses,
     netIncome: totalRevenue - totalExpenses,
     pendingMaintenance: Number(row.pendingMaintenance),
