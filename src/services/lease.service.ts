@@ -71,6 +71,7 @@ export async function listLeaseCharges(c: string, leaseId: string) {
   await getLease(c, leaseId);
   return repo.findLeaseCharges(c, leaseId);
 }
+
 export async function addLeaseCharge(c: string, leaseId: string, d: any) {
   await getLease(c, leaseId);
   return repo.createLeaseCharge(leaseId, d);

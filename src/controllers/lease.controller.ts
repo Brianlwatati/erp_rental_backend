@@ -21,6 +21,22 @@ export async function list(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+export async function getTenantLeases(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    const tenantId = param(r, "id");
+    res.json({
+      success: true,
+      data: await s.listLeases(c(r), { tenantId }),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function get(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({ success: true, data: await s.getLease(c(r), param(r, "id")) });

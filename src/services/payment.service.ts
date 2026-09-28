@@ -16,6 +16,11 @@ export const listPayments = (
   filters: { status?: string; tenantId?: string },
 ) => repo.findPayments(c, filters);
 
+export async function getTenantPayments(c: string, tenantId: string) {
+  await verifyTenant(c, tenantId);
+  return repo.findPayments(c, { tenantId });
+}
+
 export async function getPayment(c: string, id: string) {
   const payment = await repo.findPaymentById(c, id);
   if (!payment) throw new Error("PAYMENT_NOT_FOUND");
@@ -32,7 +37,11 @@ async function applyAllocation(
   amount: number,
   client: any,
 ) {
-  const invoice = await invoiceRepo.findInvoiceByIdForUpdate(c, invoiceId, client);
+  const invoice = await invoiceRepo.findInvoiceByIdForUpdate(
+    c,
+    invoiceId,
+    client,
+  );
   if (!invoice) throw new Error("INVOICE_NOT_FOUND");
   if (invoice.tenant_id !== tenantId)
     throw new Error("INVOICE_TENANT_MISMATCH");

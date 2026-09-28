@@ -18,6 +18,23 @@ export async function list(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+
+export async function getTenantPayments(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    const tenantId = param(r, "id");
+    res.json({
+      success: true,
+      data: await s.getTenantPayments(c(r), tenantId),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function get(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({ success: true, data: await s.getPayment(c(r), param(r, "id")) });
@@ -66,7 +83,10 @@ export async function issueReceipt(r: Request, res: Response, n: NextFunction) {
   try {
     res.status(201).json({
       success: true,
-      data: await s.issueReceipt(c(r), param(r, "id"), { ...r.body, issuedBy: r.auth!.userId }),
+      data: await s.issueReceipt(c(r), param(r, "id"), {
+        ...r.body,
+        issuedBy: r.auth!.userId,
+      }),
     });
   } catch (e) {
     n(e);
