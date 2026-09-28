@@ -21,6 +21,7 @@ CREATE TABLE rental_leases (
   billing_day INTEGER NOT NULL DEFAULT 1 CHECK (billing_day BETWEEN 1 AND 28),
   status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
     CHECK (status IN ('DRAFT', 'ACTIVE', 'EXPIRED', 'TERMINATED')),
+  lease_invoice_id UUID REFERENCES rental_invoices(id) ON DELETE SET NULL,
   termination_date DATE,
   termination_reason TEXT,
   notes TEXT,
