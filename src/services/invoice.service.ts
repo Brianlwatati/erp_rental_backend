@@ -11,7 +11,7 @@ async function verifyLeaseAndTenant(
 ) {
   const lease = (
     await client.query(
-      `SELECT id, tenant_id, deposit_amount, include_deposit_in_first_invoice
+      `SELECT id, tenant_id, lease_invoice_id, deposit_amount, include_deposit_in_first_invoice
        FROM rental_leases WHERE id=$1 AND company_id=$2 FOR UPDATE`,
       [leaseId, c],
     )
@@ -51,13 +51,17 @@ export async function getInvoice(c: string, id: string) {
 export async function createInvoice(c: string, d: any) {
   return withTransaction(async (client) => {
     const lease = await verifyLeaseAndTenant(c, d.leaseId, d.tenantId, client);
+    if (lease.lease_invoice_id) {
+      throw new Error("LEASE_INVOICE_ALREADY_CREATED");
+    }
     const previousInvoice = await client.query(
-      `SELECT EXISTS (
-         SELECT 1 FROM rental_invoices WHERE lease_id=$1 AND status <> 'CANCELLED'
-       ) AS exists`,
+      "SELECT id FROM rental_invoices WHERE lease_id=$1 LIMIT 1",
       [d.leaseId],
     );
-    const isFirstInvoice = !previousInvoice.rows[0].exists;
+    if (previousInvoice.rowCount) {
+      throw new Error("LEASE_INVOICE_ALREADY_CREATED");
+    }
+    const isFirstInvoice = true;
     const itemsToCreate = [...d.items];
     const hasCombinedRentAndCharges = itemsToCreate.some((item) =>
       ["RENT_PLUS_CHARGES", "RENTPLUSCHARGES"].includes(
@@ -122,6 +126,11 @@ export async function createInvoice(c: string, d: any) {
     for (const item of itemsToCreate) {
       await repo.createInvoiceItem(invoice.id, item, client);
     }
+    await client.query(
+      `UPDATE rental_leases SET lease_invoice_id=$3, updated_at=NOW()
+       WHERE company_id=$1 AND id=$2 AND lease_invoice_id IS NULL`,
+      [c, d.leaseId, invoice.id],
+    );
     const finalInvoice = await repo.recomputeInvoiceTotals(invoice.id, client);
     const items = await repo.findInvoiceItems(invoice.id, client);
     return { ...finalInvoice, items };
