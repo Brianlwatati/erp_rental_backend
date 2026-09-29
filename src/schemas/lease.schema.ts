@@ -18,6 +18,7 @@ export const leaseCreateSchema = z.object({
   endDate: z.string().date().optional(),
   monthlyRent: z.number().nonnegative(),
   depositAmount: z.number().nonnegative().default(0),
+  includeDepositInFirstInvoice: z.boolean().default(false),
   billingDay: z.number().int().min(1).max(28).default(1),
   status: z.enum(["DRAFT", "ACTIVE", "EXPIRED", "TERMINATED"]).optional(),
   notes: z.string().max(2000).optional(),

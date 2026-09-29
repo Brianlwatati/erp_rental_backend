@@ -1,27 +1,31 @@
 import * as repo from "../repositories/invoice.repository";
 import { query, withTransaction } from "../config/database";
 import { generateDocumentNumber } from "../utils/number-generator";
+import type { PoolClient } from "pg";
 
 async function verifyLeaseAndTenant(
   c: string,
   leaseId: string,
   tenantId: string,
+  client: PoolClient,
 ) {
   const lease = (
-    await query(
-      "SELECT id, tenant_id FROM rental_leases WHERE id=$1 AND company_id=$2",
+    await client.query(
+      `SELECT id, tenant_id, deposit_amount, include_deposit_in_first_invoice
+       FROM rental_leases WHERE id=$1 AND company_id=$2 FOR UPDATE`,
       [leaseId, c],
     )
   ).rows[0];
   if (!lease) throw new Error("LEASE_NOT_FOUND");
   const tenant = (
-    await query("SELECT id FROM rental_tenants WHERE id=$1 AND company_id=$2", [
-      tenantId,
-      c,
-    ])
+    await client.query(
+      "SELECT id FROM rental_tenants WHERE id=$1 AND company_id=$2",
+      [tenantId, c],
+    )
   ).rows[0];
   if (!tenant) throw new Error("TENANT_NOT_FOUND");
   if (lease.tenant_id !== tenantId) throw new Error("LEASE_TENANT_MISMATCH");
+  return lease;
 }
 
 export const listInvoicesNotFullyPaid = (
@@ -45,14 +49,77 @@ export async function getInvoice(c: string, id: string) {
 }
 
 export async function createInvoice(c: string, d: any) {
-  await verifyLeaseAndTenant(c, d.leaseId, d.tenantId);
   return withTransaction(async (client) => {
+    const lease = await verifyLeaseAndTenant(c, d.leaseId, d.tenantId, client);
+    const previousInvoice = await client.query(
+      `SELECT EXISTS (
+         SELECT 1 FROM rental_invoices WHERE lease_id=$1 AND status <> 'CANCELLED'
+       ) AS exists`,
+      [d.leaseId],
+    );
+    const isFirstInvoice = !previousInvoice.rows[0].exists;
+    const itemsToCreate = [...d.items];
+    const hasCombinedRentAndCharges = itemsToCreate.some((item) =>
+      ["RENT_PLUS_CHARGES", "RENTPLUSCHARGES"].includes(
+        item.itemType.toUpperCase(),
+      ),
+    );
+    if (!hasCombinedRentAndCharges) {
+      const hasRentItem = itemsToCreate.some(
+        (item) => item.itemType.toUpperCase() === "RENT",
+      );
+      if (!hasRentItem && Number(lease.monthly_rent) > 0) {
+        itemsToCreate.push({
+          description: "Monthly rent",
+          itemType: "RENT",
+          quantity: 1,
+          unitPrice: Number(lease.monthly_rent),
+        });
+      }
+
+      const charges = await client.query(
+        `SELECT name, amount, recurring FROM rental_lease_charges
+         WHERE lease_id=$1 AND (recurring=TRUE OR $2=TRUE)`,
+        [d.leaseId, isFirstInvoice],
+      );
+      for (const charge of charges.rows) {
+        const alreadyIncluded = itemsToCreate.some(
+          (item) =>
+            item.description.trim().toLowerCase() ===
+            charge.name.trim().toLowerCase(),
+        );
+        if (!alreadyIncluded) {
+          itemsToCreate.push({
+            description: charge.name,
+            itemType: "CHARGE",
+            quantity: 1,
+            unitPrice: Number(charge.amount),
+          });
+        }
+      }
+    }
+    const alreadyHasDeposit = itemsToCreate.some(
+      (item) => item.itemType.toUpperCase() === "DEPOSIT",
+    );
+    if (
+      lease.include_deposit_in_first_invoice &&
+      isFirstInvoice &&
+      Number(lease.deposit_amount) > 0 &&
+      !alreadyHasDeposit
+    ) {
+      itemsToCreate.push({
+        description: "Security deposit",
+        itemType: "DEPOSIT",
+        quantity: 1,
+        unitPrice: Number(lease.deposit_amount),
+      });
+    }
     const invoice = await repo.createInvoiceHeader(
       c,
       { ...d, invoiceNumber: d.invoiceNumber ?? generateDocumentNumber("INV") },
       client,
     );
-    for (const item of d.items) {
+    for (const item of itemsToCreate) {
       await repo.createInvoiceItem(invoice.id, item, client);
     }
     const finalInvoice = await repo.recomputeInvoiceTotals(invoice.id, client);

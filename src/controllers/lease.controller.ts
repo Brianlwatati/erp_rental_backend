@@ -104,7 +104,10 @@ export async function addCharge(r: Request, res: Response, n: NextFunction) {
 export async function removeCharge(r: Request, res: Response, n: NextFunction) {
   try {
     await s.deleteLeaseCharge(c(r), param(r, "id"));
-    res.status(204).send();
+    res.status(200).json({
+      success: true,
+      message: "Lease charge deleted successfully",
+    });
   } catch (e) {
     n(e);
   }

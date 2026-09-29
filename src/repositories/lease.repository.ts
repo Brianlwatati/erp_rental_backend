@@ -40,8 +40,8 @@ export async function createLease(companyId: string, d: any) {
     await query(
       `INSERT INTO rental_leases(company_id,unit_id,unit_number,building_id,building_name,building_code,
       property_name,property_code,tenant_id,tenant_first_name,tenant_last_name,tenant_email,tenant_phone,lease_number,
-      start_date,end_date,monthly_rent,deposit_amount,billing_day,status,notes)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,COALESCE($20,'ACTIVE'),$21) RETURNING *`,
+      start_date,end_date,monthly_rent,deposit_amount,rentpluscharges,include_deposit_in_first_invoice,billing_day,status,notes)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$17,$19,$20,COALESCE($21,'ACTIVE'),$22) RETURNING *`,
       [
         companyId,
         d.unitId,
@@ -61,6 +61,7 @@ export async function createLease(companyId: string, d: any) {
         d.endDate ?? null,
         d.monthlyRent,
         d.depositAmount ?? 0,
+        d.includeDepositInFirstInvoice ?? false,
         d.billingDay ?? 1,
         d.status ?? null,
         d.notes ?? null,
@@ -75,7 +76,9 @@ export async function updateLease(companyId: string, id: string, d: any) {
         `UPDATE rental_leases SET lease_number=COALESCE($3,lease_number),start_date=COALESCE($4,start_date),
       end_date=COALESCE($5,end_date),monthly_rent=COALESCE($6,monthly_rent),
       deposit_amount=COALESCE($7,deposit_amount),
-      billing_day=COALESCE($8,billing_day),status=COALESCE($9,status),notes=COALESCE($10,notes),updated_at=NOW()
+        rentpluscharges=COALESCE($6,monthly_rent)+COALESCE((SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=rental_leases.id AND recurring),0),
+      include_deposit_in_first_invoice=COALESCE($8,include_deposit_in_first_invoice),
+      billing_day=COALESCE($9,billing_day),status=COALESCE($10,status),notes=COALESCE($11,notes),updated_at=NOW()
      WHERE company_id=$1 AND id=$2 RETURNING *`,
         [
           companyId,
@@ -85,6 +88,7 @@ export async function updateLease(companyId: string, id: string, d: any) {
           d.endDate,
           d.monthlyRent,
           d.depositAmount,
+          d.includeDepositInFirstInvoice,
           d.billingDay,
           d.status,
           d.notes,
