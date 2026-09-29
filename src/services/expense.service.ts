@@ -103,6 +103,10 @@ export const listExpenses = (
   c: string,
   filters: { status?: string; propertyId?: string; categoryId?: string },
 ) => repo.findExpenses(c, filters);
+
+export const listExpensesByTenant = (c: string, tenantId: string) =>
+  repo.findExpensesByTenant(c, tenantId);
+
 export async function getExpense(c: string, id: string) {
   const x = await repo.findExpenseById(c, id);
   if (!x) throw new Error("EXPENSE_NOT_FOUND");

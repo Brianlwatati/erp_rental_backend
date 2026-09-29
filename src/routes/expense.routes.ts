@@ -9,6 +9,11 @@ import {
 
 const r = Router();
 r.get("/", authorize("expense", "view"), c.listExpenses);
+r.get(
+  "/tenantexpenses/:tenantId",
+  authorize("expense", "view"),
+  c.listExpensesByTenant,
+);
 r.post(
   "/",
   authorize("expense", "create"),

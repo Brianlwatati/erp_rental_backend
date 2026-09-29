@@ -152,6 +152,21 @@ export async function findExpenses(
     )
   ).rows;
 }
+
+export async function findExpensesByTenant(
+  companyId: string,
+  tenantId: string,
+) {
+  return (
+    await query(
+      `SELECT e.* FROM rental_expenses e
+       WHERE e.company_id=$1 AND e.tenant_id=$2
+       ORDER BY e.expense_date DESC`,
+      [companyId, tenantId],
+    )
+  ).rows;
+}
+
 export async function findExpenseById(companyId: string, id: string) {
   return (
     (

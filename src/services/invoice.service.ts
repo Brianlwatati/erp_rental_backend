@@ -34,6 +34,9 @@ export const listInvoices = (
   filters: { status?: string; tenantId?: string; leaseId?: string },
 ) => repo.findInvoices(c, filters);
 
+export const listInvoicesByTenant = (c: string, tenantId: string) =>
+  repo.findInvoices(c, { tenantId });
+
 export async function getInvoice(c: string, id: string) {
   const invoice = await repo.findInvoiceById(c, id);
   if (!invoice) throw new Error("INVOICE_NOT_FOUND");

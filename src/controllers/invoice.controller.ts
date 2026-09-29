@@ -22,6 +22,18 @@ export async function list(r: Request, res: Response, n: NextFunction) {
   }
 }
 
+export async function listByTenant(r: Request, res: Response, n: NextFunction) {
+  try {
+    const { tenantId } = r.params as Record<string, string>;
+    res.json({
+      success: true,
+      data: await s.listInvoicesByTenant(c(r), tenantId),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function listNotFullyPaid(
   r: Request,
   res: Response,

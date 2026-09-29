@@ -126,6 +126,23 @@ export async function listExpenses(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+
+export async function listExpensesByTenant(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    const { tenantId } = r.params as Record<string, string>;
+    res.json({
+      success: true,
+      data: await s.listExpensesByTenant(c(r), tenantId),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function getExpense(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({ success: true, data: await s.getExpense(c(r), param(r, "id")) });

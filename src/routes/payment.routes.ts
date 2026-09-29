@@ -19,7 +19,7 @@ r.post(
 r.get("/receipts", authorize("payment", "view"), c.listReceipts);
 r.get("/receipts/:id", authorize("payment", "view"), c.getReceipt);
 r.get("/:id", authorize("payment", "view"), c.get);
-r.get("/tenants/:id", authorize("payment", "view"), c.getTenantPayments);
+r.get("/tenantpayments/:id", authorize("payment", "view"), c.getTenantPayments);
 r.post(
   "/:id/allocate",
   authorize("payment", "update"),
