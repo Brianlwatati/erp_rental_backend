@@ -1,9 +1,15 @@
 import app from "./app";
 import { env } from "./config/env";
 import { pool } from "./config/database";
+import { startScheduledJobs } from "./jobs";
+
+let stopScheduledJobs = async () => {};
 
 const server = app.listen(env.port, () => {
-  console.log(`Rental management API listening on port ${env.port} (${env.nodeEnv})`);
+  console.log(
+    `Rental management API listening on port ${env.port} (${env.nodeEnv})`,
+  );
+  stopScheduledJobs = startScheduledJobs();
 });
 
 server.requestTimeout = 30_000;
@@ -22,6 +28,8 @@ async function shutdown(signal: string) {
     process.exit(1);
   }, 10_000);
   forceExit.unref();
+
+  await stopScheduledJobs();
 
   server.close(async (err?: Error) => {
     if (err) console.error("Error while closing HTTP server", err);
