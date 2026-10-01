@@ -55,7 +55,7 @@ export async function createInvoice(c: string, d: any) {
       throw new Error("LEASE_INVOICE_ALREADY_CREATED");
     }
     const previousInvoice = await client.query(
-      "SELECT id FROM rental_invoices WHERE lease_id=$1 LIMIT 1",
+      "SELECT id FROM rental_invoices WHERE lease_id=$1 AND status <> 'CANCELLED' LIMIT 1",
       [d.leaseId],
     );
     if (previousInvoice.rowCount) {
@@ -157,18 +157,27 @@ export async function issueInvoice(c: string, id: string) {
 }
 
 export async function cancelInvoice(c: string, id: string) {
-  const existing = await repo.findInvoiceById(c, id);
-  if (!existing) throw new Error("INVOICE_NOT_FOUND");
-  if (Number(existing.amount_paid) > 0) throw new Error("INVOICE_HAS_PAYMENTS");
-  const x = await repo.setInvoiceStatus(c, id, "CANCELLED");
-  if (!x) throw new Error("INVOICE_NOT_FOUND");
-  return x;
+  return withTransaction(async (client) => {
+    const existing = await repo.findInvoiceByIdForUpdate(c, id, client);
+    if (!existing) throw new Error("INVOICE_NOT_FOUND");
+    if (Number(existing.amount_paid) > 0)
+      throw new Error("INVOICE_HAS_PAYMENTS");
+    const cancelled = await repo.setInvoiceStatus(c, id, "CANCELLED", client);
+    if (!cancelled) throw new Error("INVOICE_NOT_FOUND");
+    await client.query(
+      `UPDATE rental_leases SET lease_invoice_id=NULL, updated_at=NOW()
+       WHERE company_id=$1 AND id=$2 AND lease_invoice_id=$3`,
+      [c, existing.lease_id, id],
+    );
+    return cancelled;
+  });
 }
 
 export async function deleteInvoice(c: string, id: string) {
   const existing = await repo.findInvoiceById(c, id);
   if (!existing) throw new Error("INVOICE_NOT_FOUND");
-  if (existing.status !== "DRAFT") throw new Error("INVOICE_NOT_EDITABLE");
+  if (existing.status !== "DRAFT" && existing.status !== "CANCELLED")
+    throw new Error("INVOICE_NOT_EDITABLE");
   const x = await repo.deleteInvoice(c, id);
   if (!x) throw new Error("INVOICE_NOT_FOUND");
   return x;

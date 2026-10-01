@@ -98,7 +98,7 @@ export async function cancel(r: Request, res: Response, n: NextFunction) {
 export async function remove(r: Request, res: Response, n: NextFunction) {
   try {
     await s.deleteInvoice(c(r), param(r, "id"));
-    res.status(204).send();
+    res.status(200).send();
   } catch (e) {
     n(e);
   }
