@@ -114,7 +114,16 @@ export async function allocatePayment(
       client,
     );
     const allocations = await repo.findAllocations(paymentId, client);
-    return { ...payment, allocations };
+    const allocatedAmount = allocations.reduce(
+      (sum: number, allocation: any) => sum + Number(allocation.amount),
+      0,
+    );
+    return {
+      ...payment,
+      allocations,
+      allocated_amount: allocatedAmount,
+      unallocated_amount: Number(payment.amount) - allocatedAmount,
+    };
   });
 }
 
