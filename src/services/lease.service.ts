@@ -74,7 +74,9 @@ export async function listLeaseCharges(c: string, leaseId: string) {
 
 export async function addLeaseCharge(c: string, leaseId: string, d: any) {
   await getLease(c, leaseId);
-  return repo.createLeaseCharge(leaseId, d);
+  const charge = await repo.createLeaseCharge(c, leaseId, d);
+  if (!charge) throw new Error("LEASE_NOT_FOUND");
+  return charge;
 }
 export async function deleteLeaseCharge(c: string, id: string) {
   const x = await repo.deleteLeaseCharge(c, id);

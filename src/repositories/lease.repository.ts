@@ -1,4 +1,4 @@
-import { query } from "../config/database";
+import { query, withTransaction } from "../config/database";
 
 export async function findLeases(
   companyId: string,
@@ -129,23 +129,58 @@ export async function findLeaseCharges(companyId: string, leaseId: string) {
     )
   ).rows;
 }
-export async function createLeaseCharge(leaseId: string, d: any) {
-  return (
-    await query(
-      `INSERT INTO rental_lease_charges(lease_id,name,charge_type,amount,recurring) VALUES($1,$2,$3,$4,$5) 
-      RETURNING *`,
-      [leaseId, d.name, d.chargeType, d.amount, d.recurring ?? true],
-    )
-  ).rows[0];
+export async function createLeaseCharge(
+  companyId: string,
+  leaseId: string,
+  d: any,
+) {
+  return withTransaction(async (client) => {
+    const lease = await client.query(
+      "SELECT id FROM rental_leases WHERE company_id=$1 AND id=$2 FOR UPDATE",
+      [companyId, leaseId],
+    );
+    if (!lease.rowCount) return null;
+
+    const charge = (
+      await client.query(
+        `INSERT INTO rental_lease_charges(lease_id,name,charge_type,amount,recurring) VALUES($1,$2,$3,$4,$5)
+        RETURNING *`,
+        [leaseId, d.name, d.chargeType, d.amount, d.recurring ?? true],
+      )
+    ).rows[0];
+    await client.query(
+      `UPDATE rental_leases SET rentpluscharges=monthly_rent+COALESCE(
+        (SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=$1 AND recurring),0), updated_at=NOW()
+       WHERE id=$1`,
+      [leaseId],
+    );
+    return charge;
+  });
 }
 export async function deleteLeaseCharge(companyId: string, id: string) {
-  return (
-    (
-      await query(
+  return withTransaction(async (client) => {
+    const lease = await client.query(
+      `SELECT l.id FROM rental_leases l JOIN rental_lease_charges lc ON lc.lease_id=l.id
+       WHERE l.company_id=$1 AND lc.id=$2 FOR UPDATE OF l`,
+      [companyId, id],
+    );
+    if (!lease.rowCount) return null;
+
+    const deleted = (
+      await client.query(
         `DELETE FROM rental_lease_charges lc USING rental_leases l
-     WHERE lc.id=$2 AND lc.lease_id=l.id AND l.company_id=$1 RETURNING lc.id`,
+         WHERE lc.id=$2 AND lc.lease_id=l.id AND l.company_id=$1 RETURNING lc.id, lc.lease_id`,
         [companyId, id],
       )
-    ).rows[0] ?? null
-  );
+    ).rows[0];
+    if (!deleted) return null;
+
+    await client.query(
+      `UPDATE rental_leases SET rentpluscharges=monthly_rent+COALESCE(
+        (SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=$1 AND recurring),0), updated_at=NOW()
+       WHERE id=$1`,
+      [deleted.lease_id],
+    );
+    return { id: deleted.id };
+  });
 }
