@@ -12,7 +12,7 @@ import vendorRoutes from "./vendor.routes";
 import expenseRoutes from "./expense.routes";
 import maintenanceRoutes from "./maintenance.routes";
 import overviewRoutes from "./overview.routes";
-
+import notificationRoutes from "./notifications.routes";
 const r = Router();
 r.get("/", (_req, res) => res.json({ message: "Rental Management API v1" }));
 r.use("/properties", propertyRoutes);
@@ -28,4 +28,5 @@ r.use("/rental-vendors", vendorRoutes);
 r.use("/expenses", expenseRoutes);
 r.use("/maintenance-requests", maintenanceRoutes);
 r.use("/overview", overviewRoutes);
+r.use("/notifications", notificationRoutes);
 export default r;

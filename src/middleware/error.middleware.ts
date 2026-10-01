@@ -57,6 +57,7 @@ const known: Record<string, [number, string]> = {
   VENDOR_NOT_FOUND: [404, "Vendor not found"],
   EXPENSE_NOT_FOUND: [404, "Expense not found"],
   MAINTENANCE_REQUEST_NOT_FOUND: [404, "Maintenance request not found"],
+  NOTIFICATION_NOT_FOUND: [404, "Notification not found"],
   MAINTENANCE_REQUEST_CLOSED: [
     409,
     "Maintenance request is already completed or cancelled",
@@ -83,74 +84,58 @@ export function errorMiddleware(
 
   switch (err.code) {
     case "22P02":
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid identifier or parameter",
-          requestId: req.requestId,
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid identifier or parameter",
+        requestId: req.requestId,
+      });
     case "22001":
-      return res
-        .status(422)
-        .json({
-          success: false,
-          message: "One or more values are too long",
-          requestId: req.requestId,
-        });
+      return res.status(422).json({
+        success: false,
+        message: "One or more values are too long",
+        requestId: req.requestId,
+      });
     case "23505":
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message: "A record with the same unique value already exists",
-          requestId: req.requestId,
-        });
+      return res.status(409).json({
+        success: false,
+        message: "A record with the same unique value already exists",
+        requestId: req.requestId,
+      });
     case "23503":
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "This record cannot be deleted because it is referenced by another record",
-          requestId: req.requestId,
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "This record cannot be deleted because it is referenced by another record",
+        requestId: req.requestId,
+      });
     case "23514":
-      return res
-        .status(422)
-        .json({
-          success: false,
-          message: "The supplied value violates a business rule",
-          requestId: req.requestId,
-        });
+      return res.status(422).json({
+        success: false,
+        message: "The supplied value violates a business rule",
+        requestId: req.requestId,
+      });
     case "23502":
-      return res
-        .status(422)
-        .json({
-          success: false,
-          message: "A required value is missing",
-          requestId: req.requestId,
-        });
+      return res.status(422).json({
+        success: false,
+        message: "A required value is missing",
+        requestId: req.requestId,
+      });
     case "40001":
     case "40P01":
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "The operation conflicted with another transaction. Please retry.",
-          requestId: req.requestId,
-        });
+      return res.status(409).json({
+        success: false,
+        message:
+          "The operation conflicted with another transaction. Please retry.",
+        requestId: req.requestId,
+      });
   }
 
   if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
-    return res
-      .status(401)
-      .json({
-        success: false,
-        message: "Invalid or expired access token",
-        requestId: req.requestId,
-      });
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired access token",
+      requestId: req.requestId,
+    });
   }
 
   return res.status(500).json({
