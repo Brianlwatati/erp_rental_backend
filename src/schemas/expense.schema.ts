@@ -25,7 +25,7 @@ export const expenseCreateSchema = z.object({
   buildingId: z.uuid().optional(),
   unitId: z.string().uuid().optional(),
   expenseCategoryId: z.string().uuid().optional(),
-  vendorId: z.string().uuid().optional(),
+  vendorId: z.string().uuid().nullable().optional(),
   expenseNumber: z.string().min(1).max(100).optional(),
   description: z.string().min(1),
   amount: z.number().positive(),

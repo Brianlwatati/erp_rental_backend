@@ -180,8 +180,13 @@ export async function findExpenseById(companyId: string, id: string) {
 export async function createExpense(companyId: string, d: any, e?: Executor) {
   return (
     await exec(e).query(
-      `INSERT INTO rental_expenses(company_id,property_id,property_name,property_code,building_id,building_name,building_code,unit_id,unit_number,expense_category_id,vendor_id,expense_number,description,amount,expense_date,payment_method,reference_number,status,created_by)
-     VALUES($1,$2,(SELECT name FROM rental_properties WHERE id=$2),(SELECT code FROM rental_properties WHERE id=$2),$3,(SELECT name FROM rental_buildings WHERE id=$3),(SELECT code FROM rental_buildings WHERE id=$3),$4,(SELECT unit_number FROM rental_units WHERE id=$4),$5,$6,$7,$8,$9,COALESCE($10,CURRENT_DATE),$11,$12,COALESCE($13,'POSTED'),$14) RETURNING *`,
+      `INSERT INTO rental_expenses(company_id,property_id,property_name,property_code,building_id,building_name,building_code,unit_id,unit_number,expense_category_id,vendor_id,vendor_name,vendor_contact_person,vendor_phone,vendor_email,expense_number,description,amount,expense_date,payment_method,reference_number,status,created_by)
+     VALUES($1,$2,(SELECT name FROM rental_properties WHERE id=$2),(SELECT code FROM rental_properties WHERE id=$2),$3,(SELECT name FROM rental_buildings WHERE id=$3),(SELECT code FROM rental_buildings WHERE id=$3),$4,(SELECT unit_number FROM rental_units WHERE id=$4),$5,$6,
+       (SELECT name FROM rental_vendors WHERE id=$6 AND company_id=$1),
+       (SELECT contact_person FROM rental_vendors WHERE id=$6 AND company_id=$1),
+       (SELECT phone FROM rental_vendors WHERE id=$6 AND company_id=$1),
+       (SELECT email FROM rental_vendors WHERE id=$6 AND company_id=$1),
+       $7,$8,$9,COALESCE($10,CURRENT_DATE),$11,$12,COALESCE($13,'POSTED'),$14) RETURNING *`,
       [
         companyId,
         d.propertyId ?? null,
@@ -206,7 +211,12 @@ export async function updateExpense(companyId: string, id: string, d: any) {
     (
       await query(
         `UPDATE rental_expenses SET property_id=COALESCE($3,property_id),building_id=COALESCE($4,building_id),
-      unit_id=COALESCE($5,unit_id),expense_category_id=COALESCE($6,expense_category_id),vendor_id=COALESCE($7,vendor_id),
+      unit_id=COALESCE($5,unit_id),expense_category_id=COALESCE($6,expense_category_id),
+      vendor_id=CASE WHEN $14 THEN $7 ELSE vendor_id END,
+      vendor_name=CASE WHEN $14 THEN (SELECT name FROM rental_vendors WHERE id=$7 AND company_id=$1) ELSE vendor_name END,
+      vendor_contact_person=CASE WHEN $14 THEN (SELECT contact_person FROM rental_vendors WHERE id=$7 AND company_id=$1) ELSE vendor_contact_person END,
+      vendor_phone=CASE WHEN $14 THEN (SELECT phone FROM rental_vendors WHERE id=$7 AND company_id=$1) ELSE vendor_phone END,
+      vendor_email=CASE WHEN $14 THEN (SELECT email FROM rental_vendors WHERE id=$7 AND company_id=$1) ELSE vendor_email END,
       description=COALESCE($8,description),amount=COALESCE($9,amount),expense_date=COALESCE($10,expense_date),
       payment_method=COALESCE($11,payment_method),reference_number=COALESCE($12,reference_number),status=COALESCE($13,status),updated_at=NOW()
      WHERE company_id=$1 AND id=$2 RETURNING *`,
@@ -224,6 +234,7 @@ export async function updateExpense(companyId: string, id: string, d: any) {
           d.paymentMethod,
           d.referenceNumber,
           d.status,
+          Object.prototype.hasOwnProperty.call(d, "vendorId"),
         ],
       )
     ).rows[0] ?? null
