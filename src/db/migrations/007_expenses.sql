@@ -35,6 +35,8 @@ CREATE TABLE rental_expenses (
   unit_id UUID REFERENCES rental_units(id) ON DELETE SET NULL,
   unit_number VARCHAR(200),
   expense_category_id UUID REFERENCES rental_expense_categories(id) ON DELETE RESTRICT,
+  expense_category_name VARCHAR(100),
+  expense_category_code VARCHAR(50),
   vendor_id UUID REFERENCES rental_vendors(id) ON DELETE SET NULL,
   vendor_name VARCHAR(200),
   vendor_contact_person VARCHAR(200),

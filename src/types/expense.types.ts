@@ -32,6 +32,8 @@ export interface Expense {
   unit_id: string | null;
   unit_number: string | null;
   expense_category_id: string | null;
+  expense_category_name: string | null;
+  expense_category_code: string | null;
   vendor_id: string | null;
   vendor_name: string | null;
   vendor_contact_person: string | null;

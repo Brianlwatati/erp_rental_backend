@@ -180,12 +180,15 @@ export async function findExpenseById(companyId: string, id: string) {
 export async function createExpense(companyId: string, d: any, e?: Executor) {
   return (
     await exec(e).query(
-      `INSERT INTO rental_expenses(company_id,property_id,property_name,property_code,building_id,building_name,building_code,unit_id,unit_number,expense_category_id,vendor_id,vendor_name,vendor_contact_person,vendor_phone,vendor_email,expense_number,description,amount,expense_date,payment_method,reference_number,status,created_by)
-     VALUES($1,$2,(SELECT name FROM rental_properties WHERE id=$2),(SELECT code FROM rental_properties WHERE id=$2),$3,(SELECT name FROM rental_buildings WHERE id=$3),(SELECT code FROM rental_buildings WHERE id=$3),$4,(SELECT unit_number FROM rental_units WHERE id=$4),$5,$6,
-       (SELECT name FROM rental_vendors WHERE id=$6 AND company_id=$1),
-       (SELECT contact_person FROM rental_vendors WHERE id=$6 AND company_id=$1),
-       (SELECT phone FROM rental_vendors WHERE id=$6 AND company_id=$1),
-       (SELECT email FROM rental_vendors WHERE id=$6 AND company_id=$1),
+      `INSERT INTO rental_expenses(company_id,property_id,property_name,property_code,building_id,building_name,building_code,unit_id,unit_number,expense_category_id,expense_category_name,expense_category_code,vendor_id,vendor_name,vendor_contact_person,vendor_phone,vendor_email,expense_number,description,amount,expense_date,payment_method,reference_number,status,created_by)
+     VALUES($1::varchar(36),$2,(SELECT name FROM rental_properties WHERE id=$2),(SELECT code FROM rental_properties WHERE id=$2),$3,(SELECT name FROM rental_buildings WHERE id=$3),(SELECT code FROM rental_buildings WHERE id=$3),$4,(SELECT unit_number FROM rental_units WHERE id=$4),$5,
+       (SELECT name FROM rental_expense_categories WHERE id=$5 AND (company_id=$1::varchar(36) OR company_id='default')),
+       (SELECT code FROM rental_expense_categories WHERE id=$5 AND (company_id=$1::varchar(36) OR company_id='default')),
+       $6,
+       (SELECT name FROM rental_vendors WHERE id=$6 AND company_id=$1::varchar(36)),
+       (SELECT contact_person FROM rental_vendors WHERE id=$6 AND company_id=$1::varchar(36)),
+       (SELECT phone FROM rental_vendors WHERE id=$6 AND company_id=$1::varchar(36)),
+       (SELECT email FROM rental_vendors WHERE id=$6 AND company_id=$1::varchar(36)),
        $7,$8,$9,COALESCE($10,CURRENT_DATE),$11,$12,COALESCE($13,'POSTED'),$14) RETURNING *`,
       [
         companyId,
@@ -211,7 +214,10 @@ export async function updateExpense(companyId: string, id: string, d: any) {
     (
       await query(
         `UPDATE rental_expenses SET property_id=COALESCE($3,property_id),building_id=COALESCE($4,building_id),
-      unit_id=COALESCE($5,unit_id),expense_category_id=COALESCE($6,expense_category_id),
+        unit_id=COALESCE($5,unit_id),
+        expense_category_id=CASE WHEN $15 THEN $6 ELSE expense_category_id END,
+        expense_category_name=CASE WHEN $15 THEN (SELECT name FROM rental_expense_categories WHERE id=$6 AND (company_id=$1::varchar(36) OR company_id='default')) ELSE expense_category_name END,
+        expense_category_code=CASE WHEN $15 THEN (SELECT code FROM rental_expense_categories WHERE id=$6 AND (company_id=$1::varchar(36) OR company_id='default')) ELSE expense_category_code END,
       vendor_id=CASE WHEN $14 THEN $7 ELSE vendor_id END,
       vendor_name=CASE WHEN $14 THEN (SELECT name FROM rental_vendors WHERE id=$7 AND company_id=$1) ELSE vendor_name END,
       vendor_contact_person=CASE WHEN $14 THEN (SELECT contact_person FROM rental_vendors WHERE id=$7 AND company_id=$1) ELSE vendor_contact_person END,
@@ -235,6 +241,7 @@ export async function updateExpense(companyId: string, id: string, d: any) {
           d.referenceNumber,
           d.status,
           Object.prototype.hasOwnProperty.call(d, "vendorId"),
+          Object.prototype.hasOwnProperty.call(d, "expenseCategoryId"),
         ],
       )
     ).rows[0] ?? null
