@@ -1,4 +1,5 @@
 import * as repo from "../repositories/invoice.repository";
+import * as paymentRepo from "../repositories/payment.repository";
 import { query, withTransaction } from "../config/database";
 import { generateDocumentNumber } from "../utils/number-generator";
 import type { PoolClient } from "pg";
@@ -150,10 +151,41 @@ export async function updateInvoice(c: string, id: string, d: any) {
 }
 
 export async function issueInvoice(c: string, id: string) {
-  const existing = await repo.findInvoiceById(c, id);
-  if (!existing) throw new Error("INVOICE_NOT_FOUND");
-  if (existing.status !== "DRAFT") throw new Error("INVOICE_NOT_DRAFT");
-  return repo.setInvoiceStatus(c, id, "ISSUED");
+  return withTransaction(async (client) => {
+    const existing = await repo.findInvoiceById(c, id, client);
+    if (!existing) throw new Error("INVOICE_NOT_FOUND");
+    if (existing.status !== "DRAFT") throw new Error("INVOICE_NOT_DRAFT");
+
+    const availablePayments =
+      await paymentRepo.findUnallocatedPostedPaymentsForTenant(
+        c,
+        existing.tenant_id,
+        client,
+      );
+    const invoice = await repo.findInvoiceByIdForUpdate(c, id, client);
+    if (!invoice) throw new Error("INVOICE_NOT_FOUND");
+    if (invoice.status !== "DRAFT") throw new Error("INVOICE_NOT_DRAFT");
+
+    const issued = await repo.setInvoiceStatus(c, id, "ISSUED", client);
+    if (!issued) throw new Error("INVOICE_NOT_FOUND");
+    let remainingCents = Math.round(Number(issued.balance) * 100);
+
+    for (const payment of availablePayments) {
+      if (remainingCents <= 0) break;
+      const availableCents =
+        Math.round(Number(payment.amount) * 100) -
+        Math.round(Number(payment.allocated_amount) * 100);
+      const allocationCents = Math.min(availableCents, remainingCents);
+      if (allocationCents <= 0) continue;
+
+      const allocation = allocationCents / 100;
+      await paymentRepo.createAllocation(payment.id, id, allocation, client);
+      await repo.adjustInvoiceAmountPaid(id, allocation, client);
+      remainingCents -= allocationCents;
+    }
+
+    return repo.recomputeInvoiceTotals(id, client);
+  });
 }
 
 export async function cancelInvoice(c: string, id: string) {

@@ -7,19 +7,25 @@ export async function findPayments(
   companyId: string,
   filters: { status?: string; tenantId?: string },
 ) {
-  const clauses = ["company_id=$1"];
+  const clauses = ["p.company_id=$1"];
   const params: unknown[] = [companyId];
   if (filters.status) {
     params.push(filters.status);
-    clauses.push(`status=$${params.length}`);
+    clauses.push(`p.status=$${params.length}`);
   }
   if (filters.tenantId) {
     params.push(filters.tenantId);
-    clauses.push(`tenant_id=$${params.length}`);
+    clauses.push(`p.tenant_id=$${params.length}`);
   }
   return (
     await query(
-      `SELECT * FROM rental_payments WHERE ${clauses.join(" AND ")} ORDER BY created_at DESC`,
+      `SELECT p.*,
+        COALESCE(SUM(a.amount), 0)::numeric AS allocated_amount,
+        GREATEST(p.amount - COALESCE(SUM(a.amount), 0), 0)::numeric AS unallocated_amount
+       FROM rental_payments p
+       LEFT JOIN rental_payment_allocations a ON a.payment_id=p.id
+       WHERE ${clauses.join(" AND ")}
+       GROUP BY p.id ORDER BY p.created_at DESC`,
       params,
     )
   ).rows;
@@ -32,11 +38,46 @@ export async function findPaymentById(
   return (
     (
       await exec(e).query(
-        "SELECT * FROM rental_payments WHERE company_id=$1 AND id=$2",
+        `SELECT p.*,
+          COALESCE(SUM(a.amount), 0)::numeric AS allocated_amount,
+          GREATEST(p.amount - COALESCE(SUM(a.amount), 0), 0)::numeric AS unallocated_amount
+         FROM rental_payments p
+         LEFT JOIN rental_payment_allocations a ON a.payment_id=p.id
+         WHERE p.company_id=$1 AND p.id=$2
+         GROUP BY p.id`,
         [companyId, id],
       )
     ).rows[0] ?? null
   );
+}
+
+export async function findUnallocatedPostedPaymentsForTenant(
+  companyId: string,
+  tenantId: string,
+  e: Executor,
+) {
+  const lockedPayments = await e.query(
+    `SELECT id FROM rental_payments
+     WHERE company_id=$1 AND tenant_id=$2 AND status='POSTED'
+     ORDER BY payment_date, created_at, id FOR UPDATE`,
+    [companyId, tenantId],
+  );
+  const paymentIds = lockedPayments.rows.map((payment) => payment.id);
+  if (!paymentIds.length) return [];
+
+  return (
+    await e.query(
+      `SELECT p.id, p.amount,
+        COALESCE(SUM(a.amount), 0)::numeric AS allocated_amount
+       FROM rental_payments p
+       LEFT JOIN rental_payment_allocations a ON a.payment_id=p.id
+       WHERE p.id=ANY($1::uuid[])
+       GROUP BY p.id
+       HAVING p.amount > COALESCE(SUM(a.amount), 0)
+       ORDER BY MIN(p.payment_date), MIN(p.created_at), p.id`,
+      [paymentIds],
+    )
+  ).rows;
 }
 
 export async function findPaymentByIdForUpdate(

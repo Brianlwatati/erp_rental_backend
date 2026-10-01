@@ -80,7 +80,16 @@ export async function createPayment(c: string, d: any) {
       );
     }
     const finalAllocations = await repo.findAllocations(payment.id, client);
-    return { ...payment, allocations: finalAllocations };
+    const allocatedAmount = finalAllocations.reduce(
+      (sum: number, allocation: any) => sum + Number(allocation.amount),
+      0,
+    );
+    return {
+      ...payment,
+      allocations: finalAllocations,
+      allocated_amount: allocatedAmount,
+      unallocated_amount: Number(payment.amount) - allocatedAmount,
+    };
   });
 }
 
