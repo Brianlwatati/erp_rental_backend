@@ -24,6 +24,12 @@ r.patch(
   validateBody(leaseUpdateSchema),
   c.update,
 );
+r.put(
+  "/:id",
+  authorize("lease", "update"),
+  validateBody(leaseUpdateSchema),
+  c.update,
+);
 r.post(
   "/:id/terminate",
   authorize("lease", "update"),
