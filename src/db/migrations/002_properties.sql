@@ -48,6 +48,7 @@ CREATE TABLE rental_units (
   unit_type_id UUID REFERENCES rental_unit_types(id) ON DELETE SET NULL,
   unit_number VARCHAR(50) NOT NULL,
   floor INTEGER,
+  grid_column INTEGER CHECK (grid_column IS NULL OR (floor IS NOT NULL AND grid_column >= 0)),
   monthly_rent NUMERIC(14,2) NOT NULL DEFAULT 0 CHECK (monthly_rent >= 0),
   deposit_amount NUMERIC(14,2) NOT NULL DEFAULT 0 CHECK (deposit_amount >= 0),
   status VARCHAR(20) NOT NULL DEFAULT 'VACANT'
@@ -55,7 +56,8 @@ CREATE TABLE rental_units (
   description TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(building_id, unit_number)
+  UNIQUE(building_id, unit_number),
+  UNIQUE(building_id, floor, grid_column)
 );
 
 CREATE INDEX idx_properties_company ON rental_properties(company_id);

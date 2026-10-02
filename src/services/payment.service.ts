@@ -80,15 +80,17 @@ export async function createPayment(c: string, d: any) {
       );
     }
     const finalAllocations = await repo.findAllocations(payment.id, client);
-    const allocatedAmount = finalAllocations.reduce(
-      (sum: number, allocation: any) => sum + Number(allocation.amount),
+    const allocatedCents = finalAllocations.reduce(
+      (sum: number, allocation: any) =>
+        sum + Math.round(Number(allocation.amount) * 100),
       0,
     );
     return {
       ...payment,
       allocations: finalAllocations,
-      allocated_amount: allocatedAmount,
-      unallocated_amount: Number(payment.amount) - allocatedAmount,
+      allocated_amount: allocatedCents / 100,
+      unallocated_amount:
+        (Math.round(Number(payment.amount) * 100) - allocatedCents) / 100,
     };
   });
 }
@@ -114,15 +116,17 @@ export async function allocatePayment(
       client,
     );
     const allocations = await repo.findAllocations(paymentId, client);
-    const allocatedAmount = allocations.reduce(
-      (sum: number, allocation: any) => sum + Number(allocation.amount),
+    const allocatedCents = allocations.reduce(
+      (sum: number, allocation: any) =>
+        sum + Math.round(Number(allocation.amount) * 100),
       0,
     );
     return {
       ...payment,
       allocations,
-      allocated_amount: allocatedAmount,
-      unallocated_amount: Number(payment.amount) - allocatedAmount,
+      allocated_amount: allocatedCents / 100,
+      unallocated_amount:
+        (Math.round(Number(payment.amount) * 100) - allocatedCents) / 100,
     };
   });
 }

@@ -1,5 +1,5 @@
 import * as repo from "../repositories/unit.repository";
-import { query } from "../config/database";
+import { query, withTransaction } from "../config/database";
 async function verify(c: string, id: string) {
   if (
     !(
@@ -16,8 +16,16 @@ export async function listUnits(c: string, b: string) {
   return repo.findUnits(c, b);
 }
 export async function createUnit(c: string, b: string, d: any) {
-  await verify(c, b);
-  return repo.createUnit(b, d);
+  return withTransaction(async (client) => {
+    const building = await client.query(
+      `SELECT b.id FROM rental_buildings b
+       JOIN rental_properties p ON p.id=b.property_id
+       WHERE b.id=$1 AND p.company_id=$2 FOR UPDATE OF b`,
+      [b, c],
+    );
+    if (!building.rowCount) throw new Error("BUILDING_NOT_FOUND");
+    return repo.createUnit(b, d, client);
+  });
 }
 export async function getUnit(c: string, id: string) {
   const x = await repo.findUnitById(c, id);
@@ -25,9 +33,27 @@ export async function getUnit(c: string, id: string) {
   return x;
 }
 export async function updateUnit(c: string, id: string, d: any) {
-  const x = await repo.updateUnit(c, id, d);
-  if (!x) throw new Error("UNIT_NOT_FOUND");
-  return x;
+  return withTransaction(async (client) => {
+    const existing = await repo.findUnitByIdForUpdate(c, id, client);
+    if (!existing) throw new Error("UNIT_NOT_FOUND");
+
+    const updates = { ...d };
+    if (
+      d.floor !== undefined &&
+      d.floor !== existing.floor &&
+      d.gridColumn === undefined
+    ) {
+        updates.gridColumn = await repo.nextGridColumn(
+          existing.building_id,
+          d.floor,
+          client,
+        );
+    }
+
+    const updated = await repo.updateUnit(c, id, updates, client);
+    if (!updated) throw new Error("UNIT_NOT_FOUND");
+    return updated;
+  });
 }
 export async function deleteUnit(c: string, id: string) {
   const x = await repo.deleteUnit(c, id);

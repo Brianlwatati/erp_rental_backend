@@ -31,6 +31,7 @@ export const unitCreateSchema = z.object({
   unitTypeId: z.string().uuid().optional(),
   unitNumber: z.string().min(1).max(50),
   floor: z.number().int().optional(),
+  gridColumn: z.number().int().nonnegative().optional(),
   monthlyRent: z.number().nonnegative(),
   depositAmount: z.number().nonnegative().default(0),
   status: z
