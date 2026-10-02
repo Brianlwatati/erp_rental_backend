@@ -38,6 +38,13 @@ export async function getBuilding(c: string, id: string) {
   if (!x) throw new Error("BUILDING_NOT_FOUND");
   return x;
 }
+
+export async function getBuildingUnits(c: string, id: string) {
+  const x = await repo.findBuildingById(c, id);
+  if (!x) throw new Error("BUILDING_NOT_FOUND");
+  return repo.findUnitsByBuildingId(c, id);
+}
+
 export async function updateBuilding(c: string, id: string, d: any) {
   const x = await repo.updateBuilding(c, id, d);
   if (!x) throw new Error("BUILDING_NOT_FOUND");

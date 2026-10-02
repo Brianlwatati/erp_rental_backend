@@ -35,6 +35,18 @@ export async function get(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+
+export async function getUnits(r: Request, res: Response, n: NextFunction) {
+  try {
+    res.json({
+      success: true,
+      data: await s.getBuildingUnits(c(r), param(r, "id")),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function create(r: Request, res: Response, n: NextFunction) {
   try {
     res.status(201).json({

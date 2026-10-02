@@ -27,6 +27,19 @@ export async function findBuildingById(companyId: string, id: string) {
     ).rows[0] ?? null
   );
 }
+
+export async function findUnitsByBuildingId(
+  companyId: string,
+  buildingId: string,
+) {
+  return (
+    await query(
+      `SELECT u.* FROM rental_units u JOIN rental_buildings b ON b.id=u.building_id JOIN rental_properties p ON p.id=b.property_id WHERE p.company_id=$1 AND u.building_id=$2 ORDER BY u.floor, u.grid_column, u.unit_number`,
+      [companyId, buildingId],
+    )
+  ).rows;
+}
+
 export async function createBuilding(propertyId: string, d: any) {
   return (
     await query(
