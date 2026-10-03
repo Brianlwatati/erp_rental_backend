@@ -1,28 +1,17 @@
 import * as repo from "../repositories/unit.repository";
-import { query, withTransaction } from "../config/database";
-async function verify(c: string, id: string) {
-  if (
-    !(
-      await query(
-        `SELECT b.id FROM rental_buildings b JOIN rental_properties p ON p.id=b.property_id WHERE b.id=$1 AND p.company_id=$2`,
-        [id, c],
-      )
-    ).rowCount
-  )
-    throw new Error("BUILDING_NOT_FOUND");
-}
+import { withTransaction } from "../config/database";
 export async function listUnits(c: string, b: string) {
-  await verify(c, b);
+  if (!(await repo.buildingExists(c, b))) throw new Error("BUILDING_NOT_FOUND");
   return repo.findUnits(c, b);
+}
+export async function listUnitsByProperty(c: string, propertyId: string) {
+  if (!(await repo.propertyExists(c, propertyId)))
+    throw new Error("PROPERTY_NOT_FOUND");
+  return repo.findUnitsByProperty(c, propertyId);
 }
 export async function createUnit(c: string, b: string, d: any) {
   return withTransaction(async (client) => {
-    const building = await client.query(
-      `SELECT b.id FROM rental_buildings b
-       JOIN rental_properties p ON p.id=b.property_id
-       WHERE b.id=$1 AND p.company_id=$2 FOR UPDATE OF b`,
-      [b, c],
-    );
+    const building = await repo.lockBuildingForUnitCreation(c, b, client);
     if (!building.rowCount) throw new Error("BUILDING_NOT_FOUND");
     return repo.createUnit(b, d, client);
   });

@@ -57,6 +57,10 @@ export async function updateProperty(companyId: string, id: string, d: any) {
       `UPDATE rental_buildings SET property_name=$2,property_code=$3,updated_at=NOW() WHERE property_id=$1`,
       [id, result.rows[0].name, result.rows[0].code],
     );
+    await client.query(
+      `UPDATE rental_units SET property_name=$2,property_code=$3,updated_at=NOW() WHERE property_id=$1`,
+      [id, result.rows[0].name, result.rows[0].code],
+    );
     return result.rows[0];
   });
 }

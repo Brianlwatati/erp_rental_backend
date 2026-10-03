@@ -42,6 +42,10 @@ CREATE TABLE rental_unit_types (
 
 CREATE TABLE rental_units (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id UUID  REFERENCES rental_properties(id) ON DELETE SET NULL,
+  property_name VARCHAR(150),
+  property_code VARCHAR(50),
+  company_id VARCHAR(36) NOT NULL,
   building_id UUID NOT NULL REFERENCES rental_buildings(id) ON DELETE CASCADE,
   building_name VARCHAR(150) NOT NULL,
   building_code VARCHAR(50) NOT NULL,

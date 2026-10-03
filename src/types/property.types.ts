@@ -28,6 +28,9 @@ export interface Building {
 
 export interface Unit {
   id: string;
+  property_id: string | null;
+  property_name: string | null;
+  property_code: string | null;
   building_id: string;
   building_name: string;
   building_code: string;

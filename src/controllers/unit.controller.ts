@@ -16,6 +16,20 @@ export async function list(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+export async function listbyProperty(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    res.json({
+      success: true,
+      data: await s.listUnitsByProperty(c(r), param(r, "propertyId")),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
 export async function get(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({ success: true, data: await s.getUnit(c(r), param(r, "id")) });
