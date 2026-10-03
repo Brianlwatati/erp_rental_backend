@@ -88,7 +88,8 @@ export async function updateLease(companyId: string, id: string, d: any) {
         `UPDATE rental_leases SET lease_number=COALESCE($3,lease_number),start_date=COALESCE($4,start_date),
       end_date=COALESCE($5,end_date),monthly_rent=COALESCE($6,monthly_rent),
       deposit_amount=COALESCE($7,deposit_amount),
-        rentpluscharges=COALESCE($6,monthly_rent)+COALESCE((SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=rental_leases.id AND recurring),0),
+        rentpluscharges=COALESCE($6,monthly_rent)+COALESCE((SELECT SUM(amount) FROM rental_lease_charges 
+        WHERE lease_id=rental_leases.id),0),
       include_deposit_in_first_invoice=COALESCE($8,include_deposit_in_first_invoice),
       billing_day=COALESCE($9,billing_day),status=COALESCE($10,status),notes=COALESCE($11,notes),updated_at=NOW()
      WHERE company_id=$1 AND id=$2 RETURNING *`,
@@ -162,7 +163,7 @@ export async function createLeaseCharge(
     ).rows[0];
     await client.query(
       `UPDATE rental_leases SET rentpluscharges=monthly_rent+COALESCE(
-        (SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=$1 AND recurring),0), updated_at=NOW()
+        (SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=$1),0), updated_at=NOW()
        WHERE id=$1`,
       [leaseId],
     );
@@ -189,7 +190,7 @@ export async function deleteLeaseCharge(companyId: string, id: string) {
 
     await client.query(
       `UPDATE rental_leases SET rentpluscharges=monthly_rent+COALESCE(
-        (SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=$1 AND recurring),0), updated_at=NOW()
+        (SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=$1),0), updated_at=NOW()
        WHERE id=$1`,
       [deleted.lease_id],
     );
