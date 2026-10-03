@@ -29,6 +29,9 @@ export const listLeases = (
   filters: { status?: string; tenantId?: string; unitId?: string },
 ) => repo.findLeases(c, filters);
 
+export const listLeasesByUnitId = (companyId: string, unitId: string) =>
+  repo.findLeasesByUnitId(companyId, unitId);
+
 export async function getLease(c: string, id: string) {
   const x = await repo.findLeaseById(c, id);
   if (!x) throw new Error("LEASE_NOT_FOUND");

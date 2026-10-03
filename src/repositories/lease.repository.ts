@@ -25,6 +25,18 @@ export async function findLeases(
     )
   ).rows;
 }
+
+export async function findLeasesByUnitId(companyId: string, unitId: string) {
+  return (
+    await query(
+      `SELECT * FROM rental_leases
+       WHERE company_id=$1 AND unit_id=$2
+       ORDER BY created_at DESC`,
+      [companyId, unitId],
+    )
+  ).rows;
+}
+
 export async function findLeaseById(companyId: string, id: string) {
   return (
     (

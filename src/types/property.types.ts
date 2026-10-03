@@ -35,6 +35,11 @@ export interface Unit {
   building_name: string;
   building_code: string;
   unit_type_id: string | null;
+  unit_type_name?: string | null;
+  unit_type_code?: string | null;
+  unit_type_bedrooms?: number | null;
+  unit_type_bathrooms?: string | null;
+  building_floors?: number | null;
   unit_number: string;
   floor: number | null;
   monthly_rent: string;

@@ -104,11 +104,14 @@ export async function findUnitById(companyId: string, id: string) {
   return (
     (
       await query(
-        `SELECT u.*, p.id AS property_id, p.name AS property_name, p.code AS property_code
+        `SELECT u.*, b.floors AS building_floors,
+                ut.name AS unit_type_name, ut.code AS unit_type_code,
+                ut.bedrooms AS unit_type_bedrooms,
+                ut.bathrooms AS unit_type_bathrooms
          FROM rental_units u
          JOIN rental_buildings b ON b.id=u.building_id
-         JOIN rental_properties p ON p.id=b.property_id
-         WHERE p.company_id=$1 AND u.id=$2`,
+         LEFT JOIN rental_unit_types ut ON ut.id=u.unit_type_id
+         WHERE u.company_id=$1 AND u.id=$2`,
         [companyId, id],
       )
     ).rows[0] ?? null

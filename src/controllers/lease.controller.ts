@@ -37,6 +37,22 @@ export async function getTenantLeases(
   }
 }
 
+export async function getLeasesByUnitId(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    const unitId = param(r, "id");
+    res.json({
+      success: true,
+      data: await s.listLeasesByUnitId(c(r), unitId),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function get(r: Request, res: Response, n: NextFunction) {
   try {
     res.json({ success: true, data: await s.getLease(c(r), param(r, "id")) });
