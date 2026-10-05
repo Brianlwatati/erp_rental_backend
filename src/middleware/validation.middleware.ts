@@ -20,7 +20,10 @@ export function validateBody(schema: ZodType) {
 export function validateUuidParam(name: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const value = req.params[name];
-    if (typeof value !== "string" || !z.string().uuid().safeParse(value).success) {
+    if (
+      typeof value !== "string" ||
+      !z.string().uuid().safeParse(value).success
+    ) {
       return res.status(400).json({
         success: false,
         message: `Invalid ${name} identifier`,
