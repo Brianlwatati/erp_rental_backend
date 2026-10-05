@@ -103,10 +103,33 @@ export async function extendLeaseMonthNew(
     n(e);
   }
 }
+
+export async function extendAllCurrentMonthLeases(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    const month = r.query.month;
+    if (typeof month !== "string") {
+      throw new Error("INVALID_RENEWAL_MONTH");
+    }
+    res.status(201).json({
+      success: true,
+      data: await s.extendAllLeasesForMonth(c(r), month),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
+
 export async function remove(r: Request, res: Response, n: NextFunction) {
   try {
     await s.deleteLease(c(r), param(r, "id"));
-    res.status(204).send();
+    res.status(200).json({
+      success: true,
+      message: "Lease deleted successfully",
+    });
   } catch (e) {
     n(e);
   }

@@ -3,12 +3,14 @@ import * as c from "../controllers/lease.controller";
 import { authorize } from "../middleware/authorize";
 import {
   validateBody,
+  validateQuery,
   validateUuidParam,
 } from "../middleware/validation.middleware";
 import {
   leaseCreateSchema,
   leaseUpdateSchema,
   leaseTerminateSchema,
+  leaseExtendMonthQuerySchema,
   leaseChargeCreateSchema,
 } from "../schemas/lease.schema";
 
@@ -45,7 +47,13 @@ r.post(
   validateUuidParam("id"),
   c.extendLeaseMonthNew,
 );
-r.delete("/:id", authorize("lease", "delete"), c.remove);
+r.post(
+  "/extendallcurrentmonthleases",
+  authorize("lease", "update"),
+  validateQuery(leaseExtendMonthQuerySchema),
+  c.extendAllCurrentMonthLeases,
+);
+r.delete("/:id/delete", authorize("lease", "delete"), c.remove);
 r.get("/tenantleases/:id", authorize("lease", "view"), c.getTenantLeases);
 r.get("/unitleases/:id", authorize("lease", "view"), c.getLeasesByUnitId);
 r.get("/:leaseId/charges", authorize("lease", "view"), c.listCharges);

@@ -73,6 +73,9 @@ POST   /api/v1/leases/:id/extendleasemonthnew
                                                (creates a DRAFT lease for the following month
                                                 and copies recurring charges only; each lease
                                                 may be extended once)
+POST   /api/v1/leases/extendallcurrentmonthleases?month=YYYY-MM
+                                               (renews eligible active or expired leases
+                                                ending in that month; skips extended leases)
 DELETE /api/v1/leases/:id
 
 GET    /api/v1/leases/:leaseId/charges

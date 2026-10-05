@@ -41,6 +41,13 @@ export const leaseTerminateSchema = z.object({
   terminationReason: z.string().max(2000).optional(),
 });
 
+export const leaseExtendMonthQuerySchema = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Expected YYYY-MM")
+    .refine((month) => Number(month.slice(0, 4)) > 0, "Invalid year"),
+});
+
 export const leaseChargeCreateSchema = z.object({
   name: z.string().min(1).max(150),
   chargeType: z.string().min(1).max(50),

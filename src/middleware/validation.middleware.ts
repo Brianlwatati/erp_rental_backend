@@ -17,6 +17,21 @@ export function validateBody(schema: ZodType) {
   };
 }
 
+export function validateQuery(schema: ZodType) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      return res.status(422).json({
+        success: false,
+        message: "Validation failed",
+        errors: result.error.issues,
+        requestId: req.requestId,
+      });
+    }
+    next();
+  };
+}
+
 export function validateUuidParam(name: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const value = req.params[name];

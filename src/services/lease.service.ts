@@ -73,6 +73,12 @@ export async function extendLeaseMonthNew(c: string, id: string) {
   );
 }
 
+export async function extendAllLeasesForMonth(c: string, month: string) {
+  return repo.extendAllLeasesForMonth(c, month, () =>
+    generateDocumentNumber("LSE"),
+  );
+}
+
 export async function deleteLease(c: string, id: string) {
   const x = await repo.deleteLease(c, id);
   if (!x) throw new Error("LEASE_NOT_FOUND");
