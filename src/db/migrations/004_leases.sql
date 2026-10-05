@@ -17,6 +17,7 @@ CREATE TABLE rental_leases (
   start_date DATE NOT NULL,
   end_date DATE,
   include_deposit_in_first_invoice BOOLEAN NOT NULL DEFAULT FALSE,
+  is_lease_extended BOOLEAN NOT NULL DEFAULT FALSE,
   lease_invoice_id VARCHAR(50),
   monthly_rent NUMERIC(14,2) NOT NULL CHECK (monthly_rent >= 0),
   deposit_amount NUMERIC(14,2) NOT NULL DEFAULT 0 CHECK (deposit_amount >= 0),

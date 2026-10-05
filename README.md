@@ -208,6 +208,7 @@ GET    /api/v1/leases/:id
 POST   /api/v1/leases
 PATCH  /api/v1/leases/:id
 POST   /api/v1/leases/:id/terminate
+POST   /api/v1/leases/:id/extendleasemonthnew
 DELETE /api/v1/leases/:id
 
 GET    /api/v1/leases/:leaseId/charges
@@ -216,6 +217,10 @@ DELETE /api/v1/leases/charges/:id
 ```
 
 Only one `ACTIVE` lease per unit is allowed.
+The renewal endpoint creates a `DRAFT` lease for one month beginning the day
+after the current lease ends. It copies the lease details and recurring charges;
+non-recurring charges and first-invoice deposit collection are not carried over.
+Each lease can be extended only once; the source lease is marked as extended.
 
 ### Invoices
 

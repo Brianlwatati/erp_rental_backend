@@ -64,6 +64,15 @@ export async function terminateLease(c: string, id: string, d: any) {
   await setUnitStatus(x.unit_id, "VACANT");
   return x;
 }
+
+export async function extendLeaseMonthNew(c: string, id: string) {
+  return repo.extendLeaseMonthNew(
+    c,
+    id,
+    generateDocumentNumber("LSE"),
+  );
+}
+
 export async function deleteLease(c: string, id: string) {
   const x = await repo.deleteLease(c, id);
   if (!x) throw new Error("LEASE_NOT_FOUND");

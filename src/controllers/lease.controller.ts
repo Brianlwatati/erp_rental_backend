@@ -89,6 +89,20 @@ export async function terminate(r: Request, res: Response, n: NextFunction) {
     n(e);
   }
 }
+export async function extendLeaseMonthNew(
+  r: Request,
+  res: Response,
+  n: NextFunction,
+) {
+  try {
+    res.status(201).json({
+      success: true,
+      data: await s.extendLeaseMonthNew(c(r), param(r, "id")),
+    });
+  } catch (e) {
+    n(e);
+  }
+}
 export async function remove(r: Request, res: Response, n: NextFunction) {
   try {
     await s.deleteLease(c(r), param(r, "id"));

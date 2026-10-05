@@ -8,6 +8,12 @@ const known: Record<string, [number, string]> = {
   TENANT_NOT_FOUND: [404, "Tenant not found"],
   TENANT_DOCUMENT_NOT_FOUND: [404, "Tenant document not found"],
   LEASE_NOT_FOUND: [404, "Lease not found"],
+  LEASE_NOT_ACTIVE: [409, "Only active leases can be renewed"],
+  LEASE_ALREADY_EXTENDED: [409, "This lease has already been extended"],
+  LEASE_END_DATE_REQUIRED: [
+    422,
+    "A lease end date is required to create a renewal",
+  ],
   LEASE_INVOICE_ALREADY_CREATED: [
     409,
     "An invoice has already been created for this lease",

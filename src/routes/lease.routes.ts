@@ -1,7 +1,10 @@
 import { Router } from "express";
 import * as c from "../controllers/lease.controller";
 import { authorize } from "../middleware/authorize";
-import { validateBody } from "../middleware/validation.middleware";
+import {
+  validateBody,
+  validateUuidParam,
+} from "../middleware/validation.middleware";
 import {
   leaseCreateSchema,
   leaseUpdateSchema,
@@ -35,6 +38,12 @@ r.post(
   authorize("lease", "update"),
   validateBody(leaseTerminateSchema),
   c.terminate,
+);
+r.post(
+  "/:id/extendleasemonthnew",
+  authorize("lease", "update"),
+  validateUuidParam("id"),
+  c.extendLeaseMonthNew,
 );
 r.delete("/:id", authorize("lease", "delete"), c.remove);
 r.get("/tenantleases/:id", authorize("lease", "view"), c.getTenantLeases);

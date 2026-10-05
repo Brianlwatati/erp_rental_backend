@@ -69,6 +69,10 @@ POST   /api/v1/leases                         (validates unit + tenant belong to
 PATCH  /api/v1/leases/:id
 POST   /api/v1/leases/:id/terminate           { terminationDate, terminationReason? }
                                                (sets unit back to VACANT)
+POST   /api/v1/leases/:id/extendleasemonthnew
+                                               (creates a DRAFT lease for the following month
+                                                and copies recurring charges only; each lease
+                                                may be extended once)
 DELETE /api/v1/leases/:id
 
 GET    /api/v1/leases/:leaseId/charges

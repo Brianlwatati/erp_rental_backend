@@ -81,6 +81,76 @@ export async function createLease(companyId: string, d: any) {
     )
   ).rows[0];
 }
+
+export async function extendLeaseMonthNew(
+  companyId: string,
+  id: string,
+  leaseNumber: string,
+) {
+  return withTransaction(async (client) => {
+    const source = (
+      await client.query(
+        `SELECT id, status, end_date, is_lease_extended
+         FROM rental_leases
+         WHERE company_id=$1 AND id=$2
+         FOR UPDATE`,
+        [companyId, id],
+      )
+    ).rows[0];
+    if (!source) throw new Error("LEASE_NOT_FOUND");
+    if (source.status !== "ACTIVE") throw new Error("LEASE_NOT_ACTIVE");
+    if (source.is_lease_extended) throw new Error("LEASE_ALREADY_EXTENDED");
+    if (!source.end_date) throw new Error("LEASE_END_DATE_REQUIRED");
+
+    const renewed = (
+      await client.query(
+        `INSERT INTO rental_leases(
+           company_id,unit_id,unit_number,building_id,building_name,building_code,
+           property_name,property_code,tenant_id,tenant_first_name,tenant_last_name,
+           tenant_email,tenant_phone,lease_number,start_date,end_date,monthly_rent,
+           deposit_amount,rentpluscharges,include_deposit_in_first_invoice,
+           billing_day,status,notes
+         )
+         SELECT company_id,unit_id,unit_number,building_id,building_name,building_code,
+           property_name,property_code,tenant_id,tenant_first_name,tenant_last_name,
+           tenant_email,tenant_phone,$3,end_date+1,
+           (end_date+1+INTERVAL '1 month'-INTERVAL '1 day')::date,monthly_rent,
+           deposit_amount,monthly_rent,FALSE,billing_day,'DRAFT',notes
+         FROM rental_leases
+         WHERE company_id=$1 AND id=$2
+         RETURNING *`,
+        [companyId, id, leaseNumber],
+      )
+    ).rows[0];
+
+    await client.query(
+      `INSERT INTO rental_lease_charges(lease_id,name,charge_type,amount,recurring)
+       SELECT $2,name,charge_type,amount,TRUE
+       FROM rental_lease_charges
+       WHERE lease_id=$1 AND recurring=TRUE`,
+      [id, renewed.id],
+    );
+    await client.query(
+      `UPDATE rental_leases
+       SET is_lease_extended=TRUE,updated_at=NOW()
+       WHERE company_id=$1 AND id=$2`,
+      [companyId, id],
+    );
+    const updated = (
+      await client.query(
+        `UPDATE rental_leases
+         SET rentpluscharges=monthly_rent+COALESCE(
+           (SELECT SUM(amount) FROM rental_lease_charges WHERE lease_id=$1),0
+         ),updated_at=NOW()
+         WHERE id=$1
+         RETURNING *`,
+        [renewed.id],
+      )
+    ).rows[0];
+    return updated;
+  });
+}
+
 export async function updateLease(companyId: string, id: string, d: any) {
   return (
     (
