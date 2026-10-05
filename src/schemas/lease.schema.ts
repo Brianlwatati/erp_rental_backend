@@ -39,6 +39,7 @@ export const leaseUpdateSchema = leaseCreateSchema
 export const leaseTerminateSchema = z.object({
   terminationDate: z.string().date(),
   terminationReason: z.string().max(2000).optional(),
+  refundable: z.boolean().default(false),
 });
 
 export const leaseExtendMonthQuerySchema = z.object({

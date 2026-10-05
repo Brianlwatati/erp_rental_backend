@@ -67,8 +67,10 @@ GET    /api/v1/leases/:id
 POST   /api/v1/leases                         (validates unit + tenant belong to company;
                                                 sets the unit to OCCUPIED when the lease is ACTIVE)
 PATCH  /api/v1/leases/:id
-POST   /api/v1/leases/:id/terminate           { terminationDate, terminationReason? }
-                                               (sets unit back to VACANT)
+POST   /api/v1/leases/:id/terminate           { terminationDate, terminationReason?, refundable? }
+                                               (sets unit back to VACANT; refundable defaults
+                                                to false, true reverses payments and cancels
+                                                lease invoices)
 POST   /api/v1/leases/:id/extendleasemonthnew
                                                (creates a DRAFT lease for the following month
                                                 and copies recurring charges only; each lease

@@ -207,7 +207,7 @@ GET    /api/v1/leases?status=&tenantId=&unitId=
 GET    /api/v1/leases/:id
 POST   /api/v1/leases
 PATCH  /api/v1/leases/:id
-POST   /api/v1/leases/:id/terminate
+POST   /api/v1/leases/:id/terminate             { terminationDate, terminationReason?, refundable? }
 POST   /api/v1/leases/:id/extendleasemonthnew
 POST   /api/v1/leases/extendallcurrentmonthleases?month=YYYY-MM
 DELETE /api/v1/leases/:id
@@ -224,6 +224,9 @@ non-recurring charges and first-invoice deposit collection are not carried over.
 Each lease can be extended only once; the source lease is marked as extended.
 The batch endpoint renews eligible leases ending in the supplied month. Active
 and expired leases are eligible; terminated leases are not.
+Lease termination defaults to non-refundable. Set `refundable: true` to reverse
+payments applied to the lease's invoices and cancel those invoices. If an
+affected payment has a receipt, termination fails without applying changes.
 
 ### Invoices
 

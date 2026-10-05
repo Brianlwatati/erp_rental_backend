@@ -1,5 +1,6 @@
 import * as repo from "../repositories/lease.repository";
-import { query } from "../config/database";
+import { query, withTransaction } from "../config/database";
+import { reversePaymentInTransaction } from "./payment.service";
 import { generateDocumentNumber } from "../utils/number-generator";
 
 async function verifyUnit(c: string, unitId: string) {
@@ -59,10 +60,90 @@ export async function updateLease(c: string, id: string, d: any) {
   return x;
 }
 export async function terminateLease(c: string, id: string, d: any) {
-  const x = await repo.terminateLease(c, id, d);
-  if (!x) throw new Error("LEASE_NOT_FOUND_OR_ALREADY_TERMINATED");
-  await setUnitStatus(x.unit_id, "VACANT");
-  return x;
+  return withTransaction(async (client) => {
+    const lease = (
+      await client.query(
+        `SELECT * FROM rental_leases
+         WHERE company_id=$1 AND id=$2
+         FOR UPDATE`,
+        [c, id],
+      )
+    ).rows[0];
+    if (!lease) throw new Error("LEASE_NOT_FOUND");
+    if (lease.status === "TERMINATED")
+      throw new Error("LEASE_NOT_FOUND_OR_ALREADY_TERMINATED");
+
+    if (d.refundable) {
+      const invoices = (
+        await client.query(
+          `SELECT id FROM rental_invoices
+           WHERE company_id=$1 AND lease_id=$2 AND status <> 'CANCELLED'
+           ORDER BY id
+           FOR UPDATE`,
+          [c, id],
+        )
+      ).rows as Array<{ id: string }>;
+      const invoiceIds = invoices.map((invoice) => invoice.id);
+
+      if (invoiceIds.length) {
+        const payments = (
+          await client.query(
+            `SELECT id FROM rental_payments
+             WHERE company_id=$1
+               AND id IN (
+                 SELECT DISTINCT payment_id
+                 FROM rental_payment_allocations
+                 WHERE invoice_id=ANY($2::uuid[])
+               )
+             ORDER BY id
+             FOR UPDATE`,
+            [c, invoiceIds],
+          )
+        ).rows as Array<{ id: string }>;
+        for (const payment of payments) {
+          await reversePaymentInTransaction(c, payment.id, client);
+        }
+
+        for (const invoiceId of invoiceIds) {
+          const cancelled = await client.query(
+            `UPDATE rental_invoices
+             SET status='CANCELLED',updated_at=NOW()
+             WHERE company_id=$1 AND id=$2 AND amount_paid=0
+               AND status <> 'CANCELLED'
+               AND NOT EXISTS (
+                 SELECT 1 FROM rental_payment_allocations a
+                 WHERE a.invoice_id=rental_invoices.id
+               )`,
+            [c, invoiceId],
+          );
+          if (!cancelled.rowCount) throw new Error("INVOICE_HAS_PAYMENTS");
+        }
+        await client.query(
+          `UPDATE rental_leases
+           SET lease_invoice_id=NULL,updated_at=NOW()
+           WHERE company_id=$1 AND id=$2`,
+          [c, id],
+        );
+      }
+    }
+
+    const terminated = (
+      await client.query(
+        `UPDATE rental_leases
+         SET status='TERMINATED',termination_date=$3,termination_reason=$4,
+             updated_at=NOW()
+         WHERE company_id=$1 AND id=$2 AND status <> 'TERMINATED'
+         RETURNING *`,
+        [c, id, d.terminationDate, d.terminationReason ?? null],
+      )
+    ).rows[0];
+    if (!terminated) throw new Error("LEASE_NOT_FOUND_OR_ALREADY_TERMINATED");
+    await client.query(
+      `UPDATE rental_units SET status='VACANT',updated_at=NOW() WHERE id=$1`,
+      [terminated.unit_id],
+    );
+    return terminated;
+  });
 }
 
 export async function extendLeaseMonthNew(c: string, id: string) {

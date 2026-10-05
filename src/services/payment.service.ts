@@ -131,30 +131,40 @@ export async function allocatePayment(
   });
 }
 
+export async function reversePaymentInTransaction(
+  c: string,
+  id: string,
+  client: import("pg").PoolClient,
+) {
+  const payment = await repo.findPaymentByIdForUpdate(c, id, client);
+  if (!payment) throw new Error("PAYMENT_NOT_FOUND");
+  if (payment.status !== "POSTED") throw new Error("PAYMENT_NOT_POSTED");
+  const existingReceipt = await repo.findReceiptByPaymentId(c, id, client);
+  if (existingReceipt) throw new Error("PAYMENT_HAS_RECEIPT");
+  const allocations = await repo.findAllocations(id, client);
+  for (const a of allocations) {
+    await invoiceRepo.adjustInvoiceAmountPaid(
+      a.invoice_id,
+      -Number(a.amount),
+      client,
+    );
+    await invoiceRepo.recomputeInvoiceTotals(a.invoice_id, client);
+  }
+  await repo.deleteAllocationsForPayment(id, client);
+  for (const invoiceId of new Set(
+    allocations.map(
+      (allocation: { invoice_id: string }) => allocation.invoice_id,
+    ),
+  )) {
+    await invoiceRepo.issueInvoiceIfUnpaid(c, invoiceId, client);
+  }
+  return repo.setPaymentStatus(c, id, "REVERSED", client);
+}
+
 export async function reversePayment(c: string, id: string) {
-  return withTransaction(async (client) => {
-    const payment = await repo.findPaymentByIdForUpdate(c, id, client);
-    if (!payment) throw new Error("PAYMENT_NOT_FOUND");
-    if (payment.status !== "POSTED") throw new Error("PAYMENT_NOT_POSTED");
-    const existingReceipt = await repo.findReceiptByPaymentId(c, id, client);
-    if (existingReceipt) throw new Error("PAYMENT_HAS_RECEIPT");
-    const allocations = await repo.findAllocations(id, client);
-    for (const a of allocations) {
-      await invoiceRepo.adjustInvoiceAmountPaid(
-        a.invoice_id,
-        -Number(a.amount),
-        client,
-      );
-      await invoiceRepo.recomputeInvoiceTotals(a.invoice_id, client);
-    }
-    await repo.deleteAllocationsForPayment(id, client);
-    for (const invoiceId of new Set(
-      allocations.map((allocation: { invoice_id: string }) => allocation.invoice_id),
-    )) {
-      await invoiceRepo.issueInvoiceIfUnpaid(c, invoiceId, client);
-    }
-    return repo.setPaymentStatus(c, id, "REVERSED", client);
-  });
+  return withTransaction((client) =>
+    reversePaymentInTransaction(c, id, client),
+  );
 }
 
 export async function deletePayment(c: string, id: string) {
