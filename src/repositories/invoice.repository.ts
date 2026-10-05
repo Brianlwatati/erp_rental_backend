@@ -168,11 +168,11 @@ export async function recomputeInvoiceTotals(invoiceId: string, e: Executor) {
        total = GREATEST(COALESCE((SELECT SUM(amount) FROM rental_invoice_items WHERE invoice_id=i.id), 0) - i.discount + i.tax, 0),
        balance = GREATEST(GREATEST(COALESCE((SELECT SUM(amount) FROM rental_invoice_items WHERE invoice_id=i.id), 0) - i.discount + i.tax, 0) - i.amount_paid, 0),
        status = CASE
-         WHEN i.status IN ('CANCELLED') THEN i.status
+         WHEN i.status IN ('DRAFT', 'CANCELLED') THEN i.status
          WHEN i.amount_paid > 0 AND GREATEST(GREATEST(COALESCE((SELECT SUM(amount) FROM rental_invoice_items WHERE invoice_id=i.id), 0) - i.discount + i.tax, 0) - i.amount_paid, 0) <= 0 THEN 'PAID'
          WHEN i.amount_paid > 0 THEN 'PARTIALLY_PAID'
-         WHEN i.status = 'DRAFT' THEN 'DRAFT'
-         ELSE i.status
+         WHEN i.due_date < CURRENT_DATE THEN 'OVERDUE'
+         ELSE 'ISSUED'
        END,
        updated_at = NOW()
      WHERE i.id=$1 RETURNING i.*`,
@@ -233,6 +233,27 @@ export async function setInvoiceStatus(
     ).rows[0] ?? null
   );
 }
+
+export async function issueInvoiceIfUnpaid(
+  companyId: string,
+  id: string,
+  e: Executor,
+) {
+  return (
+    await e.query(
+      `UPDATE rental_invoices i
+       SET status='ISSUED',updated_at=NOW()
+       WHERE i.company_id=$1 AND i.id=$2 AND i.amount_paid=0
+         AND i.status <> 'CANCELLED'
+         AND NOT EXISTS (
+           SELECT 1 FROM rental_payment_allocations a WHERE a.invoice_id=i.id
+         )
+       RETURNING i.*`,
+      [companyId, id],
+    )
+  ).rows[0] ?? null;
+}
+
 export async function deleteInvoice(companyId: string, id: string) {
   return (
     (

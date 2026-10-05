@@ -148,6 +148,11 @@ export async function reversePayment(c: string, id: string) {
       await invoiceRepo.recomputeInvoiceTotals(a.invoice_id, client);
     }
     await repo.deleteAllocationsForPayment(id, client);
+    for (const invoiceId of new Set(
+      allocations.map((allocation: { invoice_id: string }) => allocation.invoice_id),
+    )) {
+      await invoiceRepo.issueInvoiceIfUnpaid(c, invoiceId, client);
+    }
     return repo.setPaymentStatus(c, id, "REVERSED", client);
   });
 }

@@ -42,6 +42,42 @@ export const listInvoices = (
 export const listInvoicesByTenant = (c: string, tenantId: string) =>
   repo.findInvoices(c, { tenantId });
 
+async function issueInvoiceWithClient(
+  c: string,
+  id: string,
+  client: import("pg").PoolClient,
+) {
+  const invoice = await repo.findInvoiceByIdForUpdate(c, id, client);
+  if (!invoice) throw new Error("INVOICE_NOT_FOUND");
+  if (invoice.status !== "DRAFT") throw new Error("INVOICE_NOT_DRAFT");
+
+  const availablePayments =
+    await paymentRepo.findUnallocatedPostedPaymentsForTenant(
+      c,
+      invoice.tenant_id,
+      client,
+    );
+  const issued = await repo.setInvoiceStatus(c, id, "ISSUED", client);
+  if (!issued) throw new Error("INVOICE_NOT_FOUND");
+  let remainingCents = Math.round(Number(issued.balance) * 100);
+
+  for (const payment of availablePayments) {
+    if (remainingCents <= 0) break;
+    const availableCents =
+      Math.round(Number(payment.amount) * 100) -
+      Math.round(Number(payment.allocated_amount) * 100);
+    const allocationCents = Math.min(availableCents, remainingCents);
+    if (allocationCents <= 0) continue;
+
+    const allocation = allocationCents / 100;
+    await paymentRepo.createAllocation(payment.id, id, allocation, client);
+    await repo.adjustInvoiceAmountPaid(id, allocation, client);
+    remainingCents -= allocationCents;
+  }
+
+  return repo.recomputeInvoiceTotals(id, client);
+}
+
 export async function getInvoice(c: string, id: string) {
   const invoice = await repo.findInvoiceById(c, id);
   if (!invoice) throw new Error("INVOICE_NOT_FOUND");
@@ -132,9 +168,10 @@ export async function createInvoice(c: string, d: any) {
        WHERE company_id=$1 AND id=$2 AND lease_invoice_id IS NULL`,
       [c, d.leaseId, invoice.id],
     );
-    const finalInvoice = await repo.recomputeInvoiceTotals(invoice.id, client);
+    await repo.recomputeInvoiceTotals(invoice.id, client);
+    const issuedInvoice = await issueInvoiceWithClient(c, invoice.id, client);
     const items = await repo.findInvoiceItems(invoice.id, client);
-    return { ...finalInvoice, items };
+    return { ...issuedInvoice, items };
   });
 }
 
@@ -151,41 +188,7 @@ export async function updateInvoice(c: string, id: string, d: any) {
 }
 
 export async function issueInvoice(c: string, id: string) {
-  return withTransaction(async (client) => {
-    const existing = await repo.findInvoiceById(c, id, client);
-    if (!existing) throw new Error("INVOICE_NOT_FOUND");
-    if (existing.status !== "DRAFT") throw new Error("INVOICE_NOT_DRAFT");
-
-    const availablePayments =
-      await paymentRepo.findUnallocatedPostedPaymentsForTenant(
-        c,
-        existing.tenant_id,
-        client,
-      );
-    const invoice = await repo.findInvoiceByIdForUpdate(c, id, client);
-    if (!invoice) throw new Error("INVOICE_NOT_FOUND");
-    if (invoice.status !== "DRAFT") throw new Error("INVOICE_NOT_DRAFT");
-
-    const issued = await repo.setInvoiceStatus(c, id, "ISSUED", client);
-    if (!issued) throw new Error("INVOICE_NOT_FOUND");
-    let remainingCents = Math.round(Number(issued.balance) * 100);
-
-    for (const payment of availablePayments) {
-      if (remainingCents <= 0) break;
-      const availableCents =
-        Math.round(Number(payment.amount) * 100) -
-        Math.round(Number(payment.allocated_amount) * 100);
-      const allocationCents = Math.min(availableCents, remainingCents);
-      if (allocationCents <= 0) continue;
-
-      const allocation = allocationCents / 100;
-      await paymentRepo.createAllocation(payment.id, id, allocation, client);
-      await repo.adjustInvoiceAmountPaid(id, allocation, client);
-      remainingCents -= allocationCents;
-    }
-
-    return repo.recomputeInvoiceTotals(id, client);
-  });
+  return withTransaction((client) => issueInvoiceWithClient(c, id, client));
 }
 
 export async function cancelInvoice(c: string, id: string) {

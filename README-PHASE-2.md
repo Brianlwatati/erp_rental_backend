@@ -90,7 +90,7 @@ GET    /api/v1/invoices                       ?status=&tenantId=&leaseId=
 GET    /api/v1/invoices/:id                   (includes line items)
 POST   /api/v1/invoices                       { tenantId, leaseId, dueDate, periodStart, periodEnd,
                                                  discount?, tax?, notes?, items: [{description,itemType,quantity?,unitPrice}] }
-                                               (subtotal/total/balance computed from items; starts as DRAFT)
+                                               (subtotal/total/balance computed from items; automatically issued)
 PATCH  /api/v1/invoices/:id                   (DRAFT invoices only)
 POST   /api/v1/invoices/:id/issue             DRAFT -> ISSUED
 POST   /api/v1/invoices/:id/cancel            (only if nothing has been paid yet)
@@ -110,8 +110,9 @@ POST   /api/v1/payments                       { tenantId, amount, paymentMethod,
                                                (allocations are optional and applied atomically at creation)
 POST   /api/v1/payments/:id/allocate          { invoiceId, amount } — allocate remaining payment to an invoice;
                                                updates the invoice's amount_paid/balance/status
-POST   /api/v1/payments/:id/reverse           (unwinds allocations and marks the payment REVERSED;
-                                               blocked once a receipt has been issued)
+POST   /api/v1/payments/:id/reverse           (unwinds allocations, returns fully unpaid
+                                               affected invoices to ISSUED, and marks the
+                                               payment REVERSED; blocked once a receipt exists)
 DELETE /api/v1/payments/:id
 
 POST   /api/v1/payments/:id/receipt           { receiptNumber?, notes?, issuedBy? } — one receipt per payment

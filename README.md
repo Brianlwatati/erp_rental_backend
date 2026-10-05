@@ -231,9 +231,9 @@ and expired leases are eligible; terminated leases are not.
 GET    /api/v1/invoices?status=&tenantId=&leaseId=
 GET    /api/v1/invoices/notfully-paid
 GET    /api/v1/invoices/:id
-POST   /api/v1/invoices
+POST   /api/v1/invoices                         (creates and issues the invoice automatically)
 PATCH  /api/v1/invoices/:id
-POST   /api/v1/invoices/:id/issue
+POST   /api/v1/invoices/:id/issue               (for existing draft invoices)
 POST   /api/v1/invoices/:id/cancel
 DELETE /api/v1/invoices/:id
 
@@ -314,7 +314,9 @@ DELETE /api/v1/maintenance-requests/costs/:id
 - Only draft invoices can be edited or deleted.
 - Invoice totals, balances, and payment status are maintained by the backend.
 - Payment allocations cannot exceed the payment's unallocated amount or invoice balance.
-- Reversing a payment reverses its invoice allocations.
+- Reversing a payment removes its invoice allocations, restores affected invoice
+  balances, returns fully unpaid affected invoices to `ISSUED`, and marks the
+  payment `REVERSED`.
 - Lease, invoice, payment, receipt, and expense document numbers are generated when omitted.
 - Deleting a referenced record may be rejected by database foreign-key constraints.
 
