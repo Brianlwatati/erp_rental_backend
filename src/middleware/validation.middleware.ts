@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodType } from "zod";
+import { z, ZodType } from "zod";
 
 export function validateBody(schema: ZodType) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -13,6 +13,20 @@ export function validateBody(schema: ZodType) {
       });
     }
     req.body = result.data;
+    next();
+  };
+}
+
+export function validateUuidParam(name: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const value = req.params[name];
+    if (typeof value !== "string" || !z.string().uuid().safeParse(value).success) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid ${name} identifier`,
+        requestId: req.requestId,
+      });
+    }
     next();
   };
 }

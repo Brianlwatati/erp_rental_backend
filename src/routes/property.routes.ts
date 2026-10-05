@@ -1,6 +1,9 @@
 import { Router } from "express";
 import * as c from "../controllers/property.controller";
-import { validateBody } from "../middleware/validation.middleware";
+import {
+  validateBody,
+  validateUuidParam,
+} from "../middleware/validation.middleware";
 import { authorize } from "../middleware/authorize";
 import {
   propertyCreateSchema,
@@ -9,7 +12,7 @@ import {
 
 const r = Router();
 r.get("/", authorize("property", "view"), c.list);
-r.get("/:id", authorize("property", "view"), c.get);
+r.get("/:id", authorize("property", "view"), validateUuidParam("id"), c.get);
 r.post(
   "/",
   authorize("property", "create"),
@@ -19,8 +22,14 @@ r.post(
 r.patch(
   "/:id",
   authorize("property", "update"),
+  validateUuidParam("id"),
   validateBody(propertyUpdateSchema),
   c.update,
 );
-r.delete("/:id", authorize("property", "delete"), c.remove);
+r.delete(
+  "/:id",
+  authorize("property", "delete"),
+  validateUuidParam("id"),
+  c.remove,
+);
 export default r;
